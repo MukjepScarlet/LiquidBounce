@@ -14,14 +14,15 @@ import okhttp3.HttpUrl.Companion.toHttpUrl
 
 private val GOOGLE_API_URL = "https://translate.googleapis.com/translate_a/t?client=gtx&dt=t".toHttpUrl()
 
+/**
+ * @author MukjepScarlet
+ */
 class GoogleTranslateApi(
     override val parent: ChoiceConfigurable<*>
 ) : TranslatorChoice("Google") {
     /**
      * [Reference](https://github.com/ssut/py-googletrans/issues/268)
      * Updated at 2025/06/11
-     *
-     * @author MukjepScarlet
      */
     override suspend fun translateInternal(
         sourceLanguage: TranslateLanguage,
