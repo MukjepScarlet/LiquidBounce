@@ -1,9 +1,13 @@
 package net.ccbluex.liquidbounce.api.thirdparty.translator
 
-sealed class TranslateLanguage {
-    object Auto : TranslateLanguage()
+sealed interface TranslateLanguage {
+    val literal: String
 
-    class Literal internal constructor(val language: String) : TranslateLanguage()
+    object Auto : TranslateLanguage {
+        override val literal = "auto"
+    }
+
+    class Literal internal constructor(override val literal: String) : TranslateLanguage
 
     companion object {
         fun of(language: String): TranslateLanguage {
@@ -11,13 +15,6 @@ sealed class TranslateLanguage {
                 "auto" -> Auto
                 else -> Literal(language)
             }
-        }
-    }
-
-    override fun toString(): String {
-        return when (this) {
-            is Auto -> "auto"
-            is Literal -> this.language
         }
     }
 }

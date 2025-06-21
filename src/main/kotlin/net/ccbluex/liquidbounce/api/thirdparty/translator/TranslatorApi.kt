@@ -15,7 +15,8 @@ import net.ccbluex.liquidbounce.features.command.commands.translate.CommandAutoT
 interface TranslatorApi {
     /**
      * Translates the provided text from a source language to a target language.
-     * The source language is auto-detected by default, and the target language is defined by the `targetLanguage` parameter.
+     * The source language is auto-detected by default,
+     * and the target language is defined by the `targetLanguage` parameter.
      *
      * @param sourceLanguage The language of the input text. Defaults to `TranslateLanguage.Auto` (auto-detection).
      * @param targetLanguage The language to which the text should be translated.

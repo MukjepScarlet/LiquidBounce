@@ -30,8 +30,8 @@ class GoogleTranslateApi(
         text: String
     ): TranslationResult {
         val url = GOOGLE_API_URL.newBuilder()
-            .addQueryParameter("sl", sourceLanguage.toString())
-            .addQueryParameter("tl", targetLanguage.toString())
+            .addQueryParameter("sl", sourceLanguage.literal)
+            .addQueryParameter("tl", targetLanguage.literal)
             .addQueryParameter("q", text)
             .build()
             .toString()
