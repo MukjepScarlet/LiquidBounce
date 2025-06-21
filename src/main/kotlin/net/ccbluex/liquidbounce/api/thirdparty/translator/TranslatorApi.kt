@@ -9,7 +9,7 @@ interface TranslatorApi {
         text: String
     ): TranslationResult {
         require(text.isNotBlank()) { "Text cannot be blank." }
-l
+
         return translateInternal(
             sourceLanguage, targetLanguage, text
         )
