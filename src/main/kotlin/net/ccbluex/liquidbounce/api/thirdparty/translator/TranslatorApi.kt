@@ -9,4 +9,3 @@ interface TranslatorApi {
         text: String
     ): TranslationResult
 }
-q
