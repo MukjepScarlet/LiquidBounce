@@ -15,8 +15,10 @@ sealed class TranslateLanguage {
 
     companion object {
         fun of(language: String): TranslateLanguage {
-            return if (language.lowercase() == "auto") Auto
-            else Of.create(language)
+            return when (language.lowercase()) {
+                "auto" -> Auto
+                else -> Of.create(language)
+            }
         }
     }
 

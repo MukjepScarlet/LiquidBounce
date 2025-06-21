@@ -20,6 +20,7 @@ package net.ccbluex.liquidbounce.features.command.commands.translate
 
 import net.ccbluex.liquidbounce.api.thirdparty.translator.TranslationResult
 import net.ccbluex.liquidbounce.api.thirdparty.translator.asLanguage
+import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.CommandException
 import net.ccbluex.liquidbounce.features.command.CommandExecutor.suspendHandler
 import net.ccbluex.liquidbounce.features.command.CommandFactory
@@ -58,44 +59,45 @@ object CommandTranslate : CommandFactory {
                 .vararg()
                 .build()
         )
-        .suspendHandler { command, args ->
-            val (sourceLanguage, targetLanguage, texts) = args
-            sourceLanguage as String
-            targetLanguage as String
-            texts as Array<*>
-
-            if (sourceLanguage.equals(targetLanguage, ignoreCase = true)) {
-                throw CommandException(command.result("sameLanguage"))
-            }
-
-            val text = texts.joinToString(" ")
-            val result = ModuleTranslation.translate(
-                sourceLanguage.asLanguage(), targetLanguage.asLanguage(), text
-            )
-
-            if (result is TranslationResult.Success) {
-                if (result.translation == result.origin) {
-                    throw CommandException(command.result("sameText"))
-                } else {
-                    chat(
-                        regular("("),
-                        variable(result.fromLanguage.asString()),
-                        regular(") "),
-                        regular(result.origin)
-                            .copyable(copyContent = result.origin),
-                    )
-                    chat(
-                        regular("("),
-                        variable(result.toLanguage.asString()),
-                        regular(") "),
-                        regular(result.translation)
-                            .copyable(copyContent = result.translation),
-                    )
-                }
-            } else {
-                chat(result.toResultText())
-            }
-        }
+        .suspendHandler(false, ::handler)
         .build()
 
+    private suspend fun handler(command: Command, args: Array<Any>) {
+        val (sourceLanguage, targetLanguage, texts) = args
+        sourceLanguage as String
+        targetLanguage as String
+        texts as Array<*>
+
+        if (sourceLanguage.equals(targetLanguage, ignoreCase = true)) {
+            throw CommandException(command.result("sameLanguage"))
+        }
+
+        val text = texts.joinToString(" ")
+        val result = ModuleTranslation.translate(
+            sourceLanguage.asLanguage(), targetLanguage.asLanguage(), text
+        )
+
+        if (result is TranslationResult.Success) {
+            if (result.translation == result.origin) {
+                throw CommandException(command.result("sameText"))
+            } else {
+                chat(
+                    regular("("),
+                    variable(result.fromLanguage.asString()),
+                    regular(") "),
+                    regular(result.origin)
+                        .copyable(copyContent = result.origin),
+                )
+                chat(
+                    regular("("),
+                    variable(result.toLanguage.asString()),
+                    regular(") "),
+                    regular(result.translation)
+                        .copyable(copyContent = result.translation),
+                )
+            }
+        } else {
+            chat(result.toResultText())
+        }
+    }
 }
