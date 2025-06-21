@@ -21,6 +21,22 @@
 
 package net.ccbluex.liquidbounce.api.thirdparty.translator
 
+/**
+ * Represents a language used for translation. The interface allows for flexibility in defining
+ * translation languages, accommodating both specific language codes (e.g., "en-US", "ru-RU") and special
+ * cases like "auto" for automatic language detection.
+ *
+ * This interface was created to handle situations where different APIs might have different
+ * requirements:
+ *
+ * - Some translation APIs accept a literal language code (e.g., "en-US" for English, "ru-ru" for Russian).
+ * - Other APIs, such as those that perform auto-detection, may use "auto" as a special keyword.
+ * - The sealed interface structure ensures that only known and valid translation languages are used,
+ *   while allowing easy extension in the future if new language types are required.
+ *
+ * By using an interface, we can define both special language cases (like `Auto`) and general language
+ * codes (represented by `Literal`) in a type-safe and scalable manner.
+ */
 sealed interface TranslateLanguage {
     val literal: String
 
