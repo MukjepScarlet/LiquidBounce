@@ -19,4 +19,11 @@ sealed class TranslateLanguage {
             else Of.create(language)
         }
     }
+
+    fun asString(): String {
+        return when (this) {
+            is Auto -> "auto"
+            is Of -> this.language
+        }
+    }
 }

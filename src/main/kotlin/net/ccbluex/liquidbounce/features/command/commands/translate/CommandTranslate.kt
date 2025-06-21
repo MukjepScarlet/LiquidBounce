@@ -18,7 +18,6 @@
  */
 package net.ccbluex.liquidbounce.features.command.commands.translate
 
-import net.ccbluex.liquidbounce.api.thirdparty.TranslatorApi
 import net.ccbluex.liquidbounce.features.command.CommandException
 import net.ccbluex.liquidbounce.features.command.CommandExecutor.suspendHandler
 import net.ccbluex.liquidbounce.features.command.CommandFactory

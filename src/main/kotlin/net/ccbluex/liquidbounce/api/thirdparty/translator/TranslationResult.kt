@@ -10,8 +10,8 @@ sealed class TranslationResult {
     data class Success(
         val origin: String,
         val translation: String,
-        val fromLanguage: String,
-        val toLanguage: String
+        val fromLanguage: TranslateLanguage,
+        val toLanguage: TranslateLanguage
     ) : TranslationResult() {
         val isValid = origin != translation && fromLanguage != toLanguage
 
