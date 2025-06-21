@@ -3,21 +3,13 @@ package net.ccbluex.liquidbounce.api.thirdparty.translator
 sealed class TranslateLanguage {
     object Auto : TranslateLanguage()
 
-    class Of private constructor(val language: String) : TranslateLanguage() {
-        companion object {
-            fun create(language: String): TranslateLanguage {
-                require(language.lowercase() != "auto") { "'auto' is not allowed as a custom language" }
-                require(language.isNotBlank()) { "Language cannot be blank" }
-                return Of(language)
-            }
-        }
-    }
+    class Literal internal constructor(val language: String) : TranslateLanguage()
 
     companion object {
         fun of(language: String): TranslateLanguage {
             return when (language.lowercase()) {
                 "auto" -> Auto
-                else -> Of.create(language)
+                else -> Literal(language)
             }
         }
     }
@@ -25,7 +17,7 @@ sealed class TranslateLanguage {
     override fun toString(): String {
         return when (this) {
             is Auto -> "auto"
-            is Of -> this.language
+            is Literal -> this.language
         }
     }
 }
