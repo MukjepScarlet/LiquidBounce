@@ -23,6 +23,7 @@ import net.ccbluex.liquidbounce.event.events.TitleEvent
 import net.ccbluex.liquidbounce.event.suspendHandler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ClientModule
+import net.ccbluex.liquidbounce.features.module.modules.client.ModuleTranslation
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.highlight
 import net.ccbluex.liquidbounce.utils.client.regular
@@ -41,7 +42,7 @@ object ModuleBetterTitle : ClientModule(
 
         val string = it.text?.string?.stripMinecraftColorCodes()?.takeUnless(String::isBlank) ?: return@suspendHandler
 
-        val result = TranslatorApi.google(text = string)
+        val result = ModuleTranslation.translate(text = string)
         if (result.isValid) {
             chat(
                 highlight(type.choiceName),

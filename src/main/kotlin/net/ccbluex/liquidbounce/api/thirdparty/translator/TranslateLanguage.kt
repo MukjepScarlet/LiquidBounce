@@ -27,3 +27,5 @@ sealed class TranslateLanguage {
         }
     }
 }
+
+fun String.asLanguage() = TranslateLanguage.of(this)

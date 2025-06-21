@@ -18,11 +18,14 @@
  */
 package net.ccbluex.liquidbounce.features.command.commands.translate
 
+import net.ccbluex.liquidbounce.api.thirdparty.translator.TranslationResult
+import net.ccbluex.liquidbounce.api.thirdparty.translator.asLanguage
 import net.ccbluex.liquidbounce.features.command.CommandException
 import net.ccbluex.liquidbounce.features.command.CommandExecutor.suspendHandler
 import net.ccbluex.liquidbounce.features.command.CommandFactory
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
+import net.ccbluex.liquidbounce.features.module.modules.client.ModuleTranslation
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.copyable
 import net.ccbluex.liquidbounce.utils.client.regular
@@ -66,27 +69,31 @@ object CommandTranslate : CommandFactory {
             }
 
             val text = texts.joinToString(" ")
-            val result = TranslatorApi.google(
-                sourceLanguage, targetLanguage, text
+            val result = ModuleTranslation.translate(
+                sourceLanguage.asLanguage(), targetLanguage.asLanguage(), text
             )
 
-            if (result.translation == result.origin) {
-                throw CommandException(command.result("sameText"))
+            if (result is TranslationResult.Success) {
+                if (result.translation == result.origin) {
+                    throw CommandException(command.result("sameText"))
+                } else {
+                    chat(
+                        regular("("),
+                        variable(result.fromLanguage.asString()),
+                        regular(") "),
+                        regular(result.origin)
+                            .copyable(copyContent = result.origin),
+                    )
+                    chat(
+                        regular("("),
+                        variable(result.toLanguage.asString()),
+                        regular(") "),
+                        regular(result.translation)
+                            .copyable(copyContent = result.translation),
+                    )
+                }
             } else {
-                chat(
-                    regular("("),
-                    variable(result.fromLanguage),
-                    regular(") "),
-                    regular(result.origin)
-                        .copyable(copyContent = result.origin),
-                )
-                chat(
-                    regular("("),
-                    variable(result.toLanguage),
-                    regular(") "),
-                    regular(result.translation)
-                        .copyable(copyContent = result.translation),
-                )
+                chat(result.toResultText())
             }
         }
         .build()

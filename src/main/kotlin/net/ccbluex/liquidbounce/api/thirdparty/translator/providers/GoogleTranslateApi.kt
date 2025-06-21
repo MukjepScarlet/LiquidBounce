@@ -6,7 +6,7 @@ import net.ccbluex.liquidbounce.api.core.HttpMethod
 import net.ccbluex.liquidbounce.api.core.parse
 import net.ccbluex.liquidbounce.api.thirdparty.translator.TranslateLanguage
 import net.ccbluex.liquidbounce.api.thirdparty.translator.TranslationResult
-import net.ccbluex.liquidbounce.api.thirdparty.translator.TranslatorApi
+import net.ccbluex.liquidbounce.api.thirdparty.translator.TranslatorChoice
 import net.ccbluex.liquidbounce.authlib.utils.array
 import net.ccbluex.liquidbounce.authlib.utils.string
 import net.ccbluex.liquidbounce.config.types.ChoiceConfigurable
@@ -16,7 +16,7 @@ private val GOOGLE_API_URL = "https://translate.googleapis.com/translate_a/t?cli
 
 class GoogleTranslateApi(
     override val parent: ChoiceConfigurable<*>
-) : TranslatorApi("Google") {
+) : TranslatorChoice("Google") {
     /**
      * [Reference](https://github.com/ssut/py-googletrans/issues/268)
      * Updated at 2025/06/11
