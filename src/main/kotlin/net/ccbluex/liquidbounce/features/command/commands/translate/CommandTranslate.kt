@@ -83,14 +83,14 @@ object CommandTranslate : CommandFactory {
             } else {
                 chat(
                     regular("("),
-                    variable(result.fromLanguage.asString()),
+                    variable(result.fromLanguage.toString()),
                     regular(") "),
                     regular(result.origin)
                         .copyable(copyContent = result.origin),
                 )
                 chat(
                     regular("("),
-                    variable(result.toLanguage.asString()),
+                    variable(result.toLanguage.toString()),
                     regular(") "),
                     regular(result.translation)
                         .copyable(copyContent = result.translation),

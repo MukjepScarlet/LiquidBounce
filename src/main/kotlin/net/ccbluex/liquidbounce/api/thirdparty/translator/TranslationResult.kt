@@ -18,9 +18,9 @@ sealed class TranslationResult(
     ) {
         override fun toResultText(): MutableText = "".asText()
             .append(regular("("))
-            .append(variable(fromLanguage.asString()))
+            .append(variable(fromLanguage.toString()))
             .append(regular("->"))
-            .append(variable(toLanguage.asString()))
+            .append(variable(toLanguage.toString()))
             .append(regular(") "))
             .append(regular(translation).copyable(copyContent = translation))
     }

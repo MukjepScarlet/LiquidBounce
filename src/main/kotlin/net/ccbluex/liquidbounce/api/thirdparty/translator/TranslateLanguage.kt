@@ -22,7 +22,7 @@ sealed class TranslateLanguage {
         }
     }
 
-    fun asString(): String {
+    override fun toString(): String {
         return when (this) {
             is Auto -> "auto"
             is Of -> this.language
