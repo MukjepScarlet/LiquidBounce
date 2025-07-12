@@ -74,9 +74,15 @@ object CommandBinds : CommandFactory {
             eachRow = { _, module ->
                 "\u2B25 ".asText()
                     .formatted(Formatting.BLUE)
-                    .append(variable(module.name).copyable())
+                    .append(highlight(module.name).copyable())
                     .append(regular(": "))
-                    .append(regular(module.bind.keyName).copyable())
+                    .append(variable(module.bind.keyName).copyable())
+                    .apply {
+                        module.bind.modifiers.forEach {
+                            append(regular(" + "))
+                            append(variable(it.choiceName))
+                        }
+                    }
                     .append(regular("("))
                     .append(variable(module.bind.action.choiceName))
                     .append(regular(")"))

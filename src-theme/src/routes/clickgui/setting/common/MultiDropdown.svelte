@@ -4,22 +4,30 @@
 
     export let name: string | null;
     export let options: string[];
-    export let value: string;
+    export let values: string[];
     export let style: string = '';
+    export let separator: string = ', ';
 
     const dispatch = createEventDispatcher();
 
     let expanded = false;
     let dropdownHead: HTMLElement;
+    let dropdownOptions: HTMLElement | null = null;
 
     function windowClickHide(e: MouseEvent) {
-        if (!dropdownHead.contains(e.target as Node)) {
+        if (!dropdownHead.contains(e.target as Node) &&
+            (dropdownOptions === null || !dropdownOptions.contains(e.target as Node))
+        ) {
             expanded = false;
         }
     }
 
     function updateValue(v: string) {
-        value = v;
+        if (values.includes(v)) {
+            values = values.filter(item => item !== v);
+        } else {
+            values = [...values, v];
+        }
         dispatch("change");
     }
 </script>
@@ -30,19 +38,26 @@
 <div class="dropdown" {style} class:expanded on:click={() => (expanded = !expanded)}>
     <div class="head" bind:this={dropdownHead}>
         {#if name !== null}
-            <span class="text">{$spaceSeperatedNames ? convertToSpacedString(name) : name}
-                &bull; {$spaceSeperatedNames ? convertToSpacedString(value) : value}</span>
+            <span class="text">
+                {$spaceSeperatedNames ? convertToSpacedString(name) : name}
+                &bull; {values.length ? ($spaceSeperatedNames ? values.map(convertToSpacedString).join(separator) : values.join(separator)) : "Unselected" }
+            </span>
         {:else}
-            <span class="text">{$spaceSeperatedNames ? convertToSpacedString(value) : value}</span>
+            <span class="text">
+                {$spaceSeperatedNames
+                    ? values.map(convertToSpacedString).join(separator)
+                    : values.join(separator)
+                }
+            </span>
         {/if}
     </div>
 
     {#if expanded}
-        <div class="options">
+        <div class="options" bind:this={dropdownOptions}>
             {#each options as o (o)}
                 <div
                         class="option"
-                        class:active={o === value}
+                        class:active={values.includes(o)}
                         on:click={() => updateValue(o)}
                 >
                     {$spaceSeperatedNames ? convertToSpacedString(o) : o}

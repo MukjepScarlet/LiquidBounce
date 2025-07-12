@@ -6,6 +6,7 @@
     import type {KeyboardKeyEvent, MouseButtonEvent} from "../../../integration/events";
     import {convertToSpacedString, spaceSeperatedNames} from "../../../theme/theme_config";
     import Dropdown from "./common/Dropdown.svelte";
+    import MultiDropdown from "./common/MultiDropdown.svelte";
 
     export let setting: ModuleSetting;
 
@@ -23,6 +24,14 @@
         if (cSetting.value.boundKey !== UNKNOWN_KEY) {
             getPrintableKeyName(cSetting.value.boundKey)
                 .then(printableKey => {
+                    // let keyName = printableKey.localized;
+                    // if (cSetting.value.modifiers?.length) {
+                    //     for (const modifier of cSetting.value.modifiers) {
+                    //         keyName += '+' + modifier;
+                    //     }
+                    // }
+                    //
+                    // printableKeyName = keyName;
                     printableKeyName = printableKey.localized;
                 });
         }
@@ -110,7 +119,15 @@
 
     {#if cSetting.value.boundKey !== UNKNOWN_KEY}
         <Dropdown name={null} options={["Toggle", "Hold"]} bind:value={cSetting.value.action}
-                  on:change={handleActionChange}/>
+                  on:change={handleActionChange} style="grid-area: action"/>
+        <MultiDropdown
+                name="Modifiers"
+                options={["Shift", "Control", "Alt", "Super"]}
+                bind:values={cSetting.value.modifiers}
+                on:change={handleActionChange}
+                style="grid-area: modifiers"
+                separator=" + "
+        />
     {/if}
 </div>
 
@@ -118,17 +135,27 @@
   @use "../../../colors.scss" as *;
 
   .setting {
-    padding: 7px 0px;
+    padding: 7px 0;
     display: grid;
     grid-template-columns: 1fr;
-    column-gap: 5px;
+    gap: 5px;
 
     &.has-value {
       grid-template-columns: 1fr max-content;
+      grid-template-rows: auto auto;
+      grid-template-areas:
+          "main action"
+          "modifiers modifiers";
+    }
+
+    &:not(.has-value) {
+      grid-template-columns: 1fr;
+      grid-template-areas: "main";
     }
   }
 
   .change-bind {
+    grid-area: main;
     background-color: transparent;
     border: solid 2px $accent-color;
     border-radius: 3px;
