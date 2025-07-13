@@ -1,12 +1,12 @@
 <script lang="ts">
     import {createEventDispatcher} from "svelte";
-    import type {BindSetting, ModuleSetting} from "../../../integration/types";
+    import type {BindModifier, BindSetting, ModuleSetting} from "../../../integration/types";
     import {listen} from "../../../integration/ws";
     import {getPrintableKeyName} from "../../../integration/rest";
     import type {KeyboardKeyEvent, MouseButtonEvent} from "../../../integration/events";
     import {convertToSpacedString, spaceSeperatedNames} from "../../../theme/theme_config";
     import Dropdown from "./common/Dropdown.svelte";
-    import MultiDropdown from "./common/MultiDropdown.svelte";
+    import MultiChoiceItem from "./common/MultiChoiceItem.svelte";
 
     export let setting: ModuleSetting;
 
@@ -24,14 +24,6 @@
         if (cSetting.value.boundKey !== UNKNOWN_KEY) {
             getPrintableKeyName(cSetting.value.boundKey)
                 .then(printableKey => {
-                    // let keyName = printableKey.localized;
-                    // if (cSetting.value.modifiers?.length) {
-                    //     for (const modifier of cSetting.value.modifiers) {
-                    //         keyName += '+' + modifier;
-                    //     }
-                    // }
-                    //
-                    // printableKeyName = keyName;
                     printableKeyName = printableKey.localized;
                 });
         }
@@ -95,6 +87,16 @@
         setting = {...cSetting};
         dispatch("change");
     }
+
+    function toggleModifier(modifier: BindModifier) {
+        if (cSetting.value.modifiers.includes(modifier)) {
+            cSetting.value.modifiers = cSetting.value.modifiers.filter(it => it !== modifier);
+        } else {
+            cSetting.value.modifiers = [...cSetting.value.modifiers, modifier];
+        }
+    }
+
+    const ALL_MODIFIERS = ["Shift", "Control", "Alt", "Super"] as const;
 </script>
 
 <div class="setting" class:has-value={cSetting.value.boundKey !== UNKNOWN_KEY}>
@@ -120,14 +122,16 @@
     {#if cSetting.value.boundKey !== UNKNOWN_KEY}
         <Dropdown name={null} options={["Toggle", "Hold"]} bind:value={cSetting.value.action}
                   on:change={handleActionChange} style="grid-area: action"/>
-        <MultiDropdown
-                name="Modifiers"
-                options={["Shift", "Control", "Alt", "Super"]}
-                bind:values={cSetting.value.modifiers}
-                on:change={handleActionChange}
-                style="grid-area: modifiers"
-                separator=" + "
-        />
+        <div class="modifiers">
+            {#each ALL_MODIFIERS as modifier (modifier)}
+                <MultiChoiceItem
+                    active={cSetting.value.modifiers.includes(modifier)}
+                    error={false}
+                    onclick={() => toggleModifier(modifier)}
+                    content={$spaceSeperatedNames ? convertToSpacedString(modifier) : modifier}
+                />
+            {/each}
+        </div>
     {/if}
 </div>
 
@@ -177,5 +181,15 @@
     .none {
       color: $clickgui-text-dimmed-color;
     }
+  }
+
+  .modifiers {
+    display: flex;
+    flex-direction: row;
+    font-size: 12px;
+    gap: 7px;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    grid-area: modifiers;
   }
 </style>

@@ -5,6 +5,7 @@
     import {convertToSpacedString, spaceSeperatedNames} from "../../../theme/theme_config";
     import ExpandArrow from "./common/ExpandArrow.svelte";
     import {setItem} from "../../../integration/persistent_storage";
+    import MultiChoiceItem from "./common/MultiChoiceItem.svelte";
 
     export let setting: ModuleSetting;
     export let path: string;
@@ -60,17 +61,13 @@
 
     {#if expanded}
         <div class="choices" transition:slide|global={{duration: 200, axis: "y"}}>
-            {#each cSetting.choices as choice}
-                <div
-                        class="choice"
-                        class:active={cSetting.value.includes(choice)}
-                        class:error={errorValue === choice}
-                        on:click={() => {
-                            handleChange(choice)
-                        }}
-                >
-                    {$spaceSeperatedNames ? convertToSpacedString(choice) : choice}
-                </div>
+            {#each cSetting.choices as choice (choice)}
+                <MultiChoiceItem
+                        active={cSetting.value.includes(choice)}
+                        error={errorValue === choice}
+                        onclick={() => {handleChange(choice)}}
+                        content={$spaceSeperatedNames ? convertToSpacedString(choice) : choice}
+                />
             {/each}
         </div>
     {/if}
@@ -88,31 +85,6 @@
     color: $clickgui-text-color;
     font-size: 12px;
     font-weight: 600;
-  }
-
-  .choice {
-    color: $clickgui-text-dimmed-color;
-    background-color: rgba($clickgui-base-color, 0.3);
-    border-radius: 3px;
-    padding: 3px 6px;
-    cursor: pointer;
-    font-weight: 500;
-    transition: ease color 0.2s;
-    overflow-wrap: anywhere;
-
-    &:hover {
-      color: $clickgui-text-color;
-    }
-
-    &.error {
-      background-color: rgba($menu-error-color, 0.1) !important;
-      color: $menu-error-color !important;
-    }
-
-    &.active {
-      background-color: rgba($accent-color, 0.1);
-      color: $accent-color;
-    }
   }
 
   .amount {

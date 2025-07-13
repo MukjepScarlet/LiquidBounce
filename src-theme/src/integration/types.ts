@@ -49,15 +49,19 @@ export interface BindSetting {
     name: string;
     value: {
         boundKey: string;
-        action: "Toggle" | "Hold";
-        modifiers: ("Shift" | "Control" | "Alt" | "Super")[];
+        action: BindAction;
+        modifiers: BindModifier[];
     };
     defaultValue: {
         boundKey: string;
-        action: "Toggle" | "Hold";
-        modifiers: ("Shift" | "Control" | "Alt" | "Super")[];
+        action: BindAction;
+        modifiers: BindModifier[];
     };
 }
+
+export type BindAction = "Toggle" | "Hold";
+
+export type BindModifier = "Shift" | "Control" | "Alt" | "Super";
 
 export interface TextSetting {
     valueType: string;
