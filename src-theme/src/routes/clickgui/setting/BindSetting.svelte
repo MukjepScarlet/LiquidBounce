@@ -5,7 +5,6 @@
     import {getPrintableKeyName} from "../../../integration/rest";
     import type {KeyboardKeyEvent, MouseButtonEvent} from "../../../integration/events";
     import {convertToSpacedString, spaceSeperatedNames} from "../../../theme/theme_config";
-    import Dropdown from "./common/Dropdown.svelte";
 
     export let setting: ModuleSetting;
 
@@ -127,10 +126,16 @@
 
     /**
      * Switch action among {@link BindAction}.
-     *
-     * TODO: rewrite this
      */
     function switchAction() {
+        if (cSetting.value.action === "Toggle") {
+            cSetting.value.action = "Hold";
+        } else if (cSetting.value.action === "Hold") {
+            cSetting.value.action = "Toggle";
+        } else {
+            throw new Error("Unexcepted action: " + cSetting.value.action);
+        }
+
         setting = {...cSetting};
         dispatch("change");
     }
@@ -159,7 +164,7 @@
             {#if cSetting.value.boundKey === UNKNOWN_KEY}
                 <span class="none">None</span>
             {:else}
-                <span>{cSetting.value.modifiers.join(" + ")} + {printableKeyName}</span>
+                <span>{cSetting.value.modifiers.join(" + ") + " + "}{printableKeyName}</span>
             {/if}
         {:else if addedModifiers.size}
             <span>{Array.from(addedModifiers).join(" + ")} + ...</span>
@@ -169,9 +174,9 @@
     </button>
 
     {#if cSetting.value.boundKey !== UNKNOWN_KEY}
-        <!-- TODO: replace with click to switch... -->
-        <Dropdown name={null} options={["Toggle", "Hold"]} bind:value={cSetting.value.action}
-                  on:change={switchAction}/>
+        <button class="action" on:click={switchAction}>
+            <span>{cSetting.value.action}</span>
+        </button>
     {/if}
 </div>
 
@@ -212,6 +217,26 @@
 
     .none {
       color: $clickgui-text-dimmed-color;
+    }
+  }
+
+  .action {
+    all: unset;
+    background-color: $accent-color;
+    padding: 6px 10px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    position: relative;
+    border-radius: 3px;
+
+    span {
+      font-weight: 500;
+      color: $clickgui-text-color;
+      font-size: 12px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
   }
 </style>
