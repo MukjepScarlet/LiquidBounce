@@ -56,14 +56,14 @@
                 return undefined;
             }
 
-            const modifierOrUndef = KEY_CODE_TO_MODIFIERS[e.keyCode];
+            const modifierOrUndef = KEY_TOKEN_TO_MODIFIERS[e.keyCode];
 
             if (!modifierOrUndef) {
                 handleActionChange(e.key);
                 return undefined;
             }
 
-            return { key: e.key, modifier: modifierOrUndef };
+            return { key: e.key, keyCode: e.keyCode, modifier: modifierOrUndef };
         } else if (Object.hasOwn(event, 'button')) {
             const e = event as MouseButtonEvent;
             handleActionChange(e.key);
@@ -116,6 +116,7 @@
     }
 
     function handleActionChange(newBoundKey: string) {
+        addedModifiers.delete(KEY_CODE_TO_MODIFIERS[newBoundKey]); // We don't want Shift+RIGHT_SHIFT
         cSetting.value.boundKey = newBoundKey;
         cSetting.value.modifiers = Array.from(addedModifiers);
         addedModifiers.clear();
@@ -143,11 +144,21 @@
     /**
      * https://www.glfw.org/docs/3.3/group__keys.html
      */
-    const KEY_CODE_TO_MODIFIERS: Record<number, BindModifier> = {
+    const KEY_TOKEN_TO_MODIFIERS: Record<number, BindModifier> = {
         340: "Shift", 344: "Shift",
         341: "Control", 345: "Control",
         342: "Alt", 346: "Alt",
         343: "Super", 347: "Super",
+    } as const;
+
+    /**
+     * From Minecraft InputUtil.Type
+     */
+    const KEY_CODE_TO_MODIFIERS: Record<string, BindModifier> = {
+        "key.keyboard.left.shift": "Shift", "key.keyboard.right.shift": "Shift",
+        "key.keyboard.left.control": "Control", "key.keyboard.right.control": "Control",
+        "key.keyboard.left.alt": "Alt", "key.keyboard.right.alt": "Alt",
+        "key.keyboard.left.win": "Super", "key.keyboard.right.win": "Super",
     } as const;
 </script>
 
@@ -159,12 +170,19 @@
             on:mouseleave={() => isHovered = false}
     >
         {#if !binding}
-            <div class="name">{$spaceSeperatedNames ? convertToSpacedString(cSetting.name) : cSetting.name}:</div>
+            {#if cSetting.value.modifiers.length < 3}
+                <div class="name">{$spaceSeperatedNames ? convertToSpacedString(cSetting.name) : cSetting.name}:</div>
+            {/if}
 
             {#if cSetting.value.boundKey === UNKNOWN_KEY}
                 <span class="none">None</span>
             {:else}
-                <span>{cSetting.value.modifiers.join(" + ") + " + "}{printableKeyName}</span>
+                <span>
+                    {#if cSetting.value.modifiers.length}
+                        {cSetting.value.modifiers.join(" + ") + " + "}
+                    {/if}
+                    {printableKeyName}
+                </span>
             {/if}
         {:else if addedModifiers.size}
             <span>{Array.from(addedModifiers).join(" + ")} + ...</span>
