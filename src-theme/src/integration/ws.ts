@@ -58,7 +58,7 @@ export function listen<E extends Event>(eventName: string, callback: (event: E) 
 /**
  * Wait next event which matches given {@link predicate}.
  */
-export async function waitNext<E extends Event>(eventName: string, predicate: (event: E) => boolean): Promise<E> {
+export async function waitMatches<E extends Event>(eventName: string, predicate: (event: E) => boolean): Promise<E> {
     return new Promise((resolve, reject) => {
         const deleteHandler = listen(eventName, (e: E) => {
             try {

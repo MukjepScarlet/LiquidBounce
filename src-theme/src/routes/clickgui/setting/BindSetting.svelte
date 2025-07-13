@@ -1,7 +1,7 @@
 <script lang="ts">
     import {createEventDispatcher, onDestroy} from "svelte";
     import type {BindModifier, BindSetting, ModuleSetting, Screen} from "../../../integration/types";
-    import {listen, waitMatches} from "../../../integration/ws";
+    import {waitMatches} from "../../../integration/ws";
     import {getPrintableKeyName} from "../../../integration/rest";
     import type {KeyboardKeyEvent, MouseButtonEvent} from "../../../integration/events";
     import {convertToSpacedString, spaceSeperatedNames} from "../../../theme/theme_config";
@@ -29,7 +29,7 @@
     }
 
     const isClickGuiScreen = (screen: Screen | undefined) =>
-        !(screen === undefined || !screen.class.startsWith("net.ccbluex.liquidbounce") || screen.title !== "ClickGUI" && screen.title !== "VS-CLICKGUI")
+        !(screen === undefined || !screen.class.startsWith("net.ccbluex.liquidbounce") || screen.title !== "ClickGUI" && screen.title !== "VS-CLICKGUI");
 
     /**
      * Gets the next possible event which can be used as a bind.
@@ -91,10 +91,8 @@
         binding = true;
 
         let event = await nextBindEvent();
-
         // Promise doesn't support cancellation, so we need manual check
         if (!binding) return;
-
         let result = handleBindEventIfNotModifier(event);
         while (result) {
             if (timeout !== undefined) {
@@ -138,18 +136,6 @@
     }
 
     /**
-     * @deprecated
-     * @param modifier
-     */
-    function toggleModifier(modifier: BindModifier) {
-        if (cSetting.value.modifiers.includes(modifier)) {
-            cSetting.value.modifiers = cSetting.value.modifiers.filter(it => it !== modifier);
-        } else {
-            cSetting.value.modifiers = [...cSetting.value.modifiers, modifier];
-        }
-    }
-
-    /**
      * https://www.glfw.org/docs/3.3/group__keys.html
      */
     const KEY_CODE_TO_MODIFIERS: Record<number, BindModifier> = {
@@ -173,7 +159,7 @@
             {#if cSetting.value.boundKey === UNKNOWN_KEY}
                 <span class="none">None</span>
             {:else}
-                <span>{printableKeyName}</span>
+                <span>{cSetting.value.modifiers.join(" + ")} + {printableKeyName}</span>
             {/if}
         {:else if addedModifiers.size}
             <span>{Array.from(addedModifiers).join(" + ")} + ...</span>
@@ -185,7 +171,7 @@
     {#if cSetting.value.boundKey !== UNKNOWN_KEY}
         <!-- TODO: replace with click to switch... -->
         <Dropdown name={null} options={["Toggle", "Hold"]} bind:value={cSetting.value.action}
-                  on:change={switchAction} style="grid-area: action"/>
+                  on:change={switchAction}/>
     {/if}
 </div>
 
@@ -196,22 +182,14 @@
     padding: 7px 0;
     display: grid;
     grid-template-columns: 1fr;
-    gap: 5px;
+    column-gap: 5px;
 
     &.has-value {
       grid-template-columns: 1fr max-content;
-      grid-template-rows: auto auto;
-      grid-template-areas: "main action";
-    }
-
-    &:not(.has-value) {
-      grid-template-columns: 1fr;
-      grid-template-areas: "main";
     }
   }
 
   .change-bind {
-    grid-area: main;
     background-color: transparent;
     border: solid 2px $accent-color;
     border-radius: 3px;
@@ -227,6 +205,8 @@
     column-gap: 5px;
 
     .name {
+      display: inline-flex;
+      align-items: center;
       font-weight: 500;
     }
 

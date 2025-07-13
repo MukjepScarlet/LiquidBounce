@@ -5,7 +5,6 @@
     export let name: string | null;
     export let options: string[];
     export let value: string;
-    export let style: string = '';
 
     const dispatch = createEventDispatcher();
 
@@ -27,7 +26,7 @@
 <svelte:window on:click={windowClickHide}/>
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <!-- svelte-ignore a11y-no-static-element-interactions -->
-<div class="dropdown" {style} class:expanded on:click={() => (expanded = !expanded)}>
+<div class="dropdown" class:expanded on:click={() => (expanded = !expanded)}>
     <div class="head" bind:this={dropdownHead}>
         {#if name !== null}
             <span class="text">{$spaceSeperatedNames ? convertToSpacedString(name) : name}
