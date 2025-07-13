@@ -5,7 +5,6 @@
     import {convertToSpacedString, spaceSeperatedNames} from "../../../theme/theme_config";
     import ExpandArrow from "./common/ExpandArrow.svelte";
     import {setItem} from "../../../integration/persistent_storage";
-    import MultiChoiceItem from "./common/MultiChoiceItem.svelte";
 
     export let setting: ModuleSetting;
     export let path: string;
@@ -62,12 +61,16 @@
     {#if expanded}
         <div class="choices" transition:slide|global={{duration: 200, axis: "y"}}>
             {#each cSetting.choices as choice (choice)}
-                <MultiChoiceItem
-                        active={cSetting.value.includes(choice)}
-                        error={errorValue === choice}
-                        onclick={() => {handleChange(choice)}}
-                        content={$spaceSeperatedNames ? convertToSpacedString(choice) : choice}
-                />
+                <div
+                        class="choice"
+                        class:active={cSetting.value.includes(choice)}
+                        class:error={errorValue === choice}
+                        on:click={() => {
+                            handleChange(choice)
+                        }}
+                >
+                    {$spaceSeperatedNames ? convertToSpacedString(choice) : choice}
+                </div>
             {/each}
         </div>
     {/if}
