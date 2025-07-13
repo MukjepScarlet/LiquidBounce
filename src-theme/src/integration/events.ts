@@ -6,20 +6,23 @@ import type {
     Proxy,
     Screen,
     Server,
-    TextComponent
+    TextComponent,
 } from "./types";
 
-export interface ClickGuiValueChangeEvent {
+export interface Event {
+}
+
+export interface ClickGuiValueChangeEvent extends Event {
     configurable: ConfigurableSetting;
 }
 
-export interface ModuleToggleEvent {
+export interface ModuleToggleEvent extends Event {
     moduleName: string;
     hidden: boolean;
     enabled: boolean;
 }
 
-export interface KeyboardKeyEvent {
+export interface KeyboardKeyEvent extends Event {
     keyCode: number;
     scanCode: number;
     action: number;
@@ -28,7 +31,7 @@ export interface KeyboardKeyEvent {
     screen: Screen | undefined;
 }
 
-export interface MouseButtonEvent {
+export interface MouseButtonEvent extends Event {
     key: string;
     button: number;
     action: number;
@@ -36,66 +39,66 @@ export interface MouseButtonEvent {
     screen: Screen | undefined;
 }
 
-export interface ScaleFactorChangeEvent {
+export interface ScaleFactorChangeEvent extends Event {
     scaleFactor: number;
 }
 
-export interface ComponentsUpdateEvent {
+export interface ComponentsUpdateEvent extends Event {
     components: Component[];
 }
 
-export interface ClientPlayerDataEvent {
+export interface ClientPlayerDataEvent extends Event {
     playerData: PlayerData;
 }
 
-export interface OverlayMessageEvent {
+export interface OverlayMessageEvent extends Event {
     text: TextComponent | string;
     tinted: boolean;
 }
 
-export interface NotificationEvent {
+export interface NotificationEvent extends Event {
     title: string;
     message: string;
     severity: "INFO" | "SUCCESS" | "ERROR" | "ENABLED" | "DISABLED";
 }
 
-export interface KeyEvent {
+export interface KeyEvent extends Event {
     key: string;
     action: number;
     mods: number;
 }
 
-export interface TargetChangeEvent {
+export interface TargetChangeEvent extends Event {
     target: PlayerData | null;
 }
 
-export interface BlockCountChangeEvent {
+export interface BlockCountChangeEvent extends Event {
     count?: number;
 }
 
-export interface AccountManagerAdditionEvent {
+export interface AccountManagerAdditionEvent extends Event {
     username: string | null;
     error: string | null;
 }
 
-export interface AccountManagerRemovalEvent {
+export interface AccountManagerRemovalEvent extends Event {
     username: string | null;
 }
 
-export interface AccountManagerMessageEvent {
+export interface AccountManagerMessageEvent extends Event {
     message: string;
 }
 
-export interface AccountManagerLoginEvent {
+export interface AccountManagerLoginEvent extends Event {
     username: string | null;
     error: string | null;
 }
 
-export interface ServerPingedEvent {
+export interface ServerPingedEvent extends Event {
     server: Server;
 }
 
-export interface PlayerInventoryEvent {
+export interface PlayerInventoryEvent extends Event {
     inventory: PlayerInventory;
 }
 
@@ -105,29 +108,29 @@ export interface PlayerInventory {
     crafting: ItemStack[];
 }
 
-export interface ProxyAdditionResultEvent {
+export interface ProxyAdditionResultEvent extends Event {
     proxy: Proxy | null;
     error: string | null;
 }
 
-export interface ProxyEditResultEvent {
+export interface ProxyEditResultEvent extends Event {
     proxy: Proxy | null;
     error: string | null;
 }
 
-export interface ProxyCheckResultEvent {
+export interface ProxyCheckResultEvent extends Event {
     proxy: Proxy;
     error: string | null;
 }
 
-export interface SpaceSeperatedNamesChangeEvent {
+export interface SpaceSeperatedNamesChangeEvent extends Event {
     value: boolean;
 }
 
-export interface ClickGuiScaleChangeEvent {
+export interface ClickGuiScaleChangeEvent extends Event {
     value: number;
 }
 
-export interface BrowserUrlChangeEvent {
+export interface BrowserUrlChangeEvent extends Event {
     url: string;
 }

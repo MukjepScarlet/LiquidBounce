@@ -1,4 +1,5 @@
 import { WS_BASE } from "./host";
+import type {Event} from "./events";
 
 console.log("Connecting to server at: ", WS_BASE);
 
@@ -36,7 +37,7 @@ function connect() {
 const alwaysListeners = new Map<string, Function[]>();
 const listeners = new Map<string, Function[]>();
 
-export function listenAlways(eventName: string, callback: Function) {
+export function listenAlways<E extends Event>(eventName: string, callback: (event: E) => any) {
     if (!alwaysListeners.has(eventName)) {
         alwaysListeners.set(eventName, []);
     }
@@ -44,7 +45,7 @@ export function listenAlways(eventName: string, callback: Function) {
     alwaysListeners.get(eventName)!!.push(callback);
 }
 
-export function listen(eventName: string, callback: Function) {
+export function listen<E extends Event>(eventName: string, callback: (event: E) => any) {
     if (!listeners.has(eventName)) {
         listeners.set(eventName, []);
     }
@@ -52,6 +53,25 @@ export function listen(eventName: string, callback: Function) {
     listeners.get(eventName)!!.push(callback);
 
     return () => deleteListener(eventName, callback);
+}
+
+/**
+ * Wait next event which matches given {@link predicate}.
+ */
+export async function waitNext<E extends Event>(eventName: string, predicate: (event: E) => boolean): Promise<E> {
+    return new Promise((resolve, reject) => {
+        const deleteHandler = listen(eventName, (e: E) => {
+            try {
+                if (predicate(e)) {
+                    resolve(e);
+                    deleteHandler();
+                }
+            } catch (e) {
+                reject(e);
+                deleteHandler();
+            }
+        })
+    });
 }
 
 export function cleanupListeners() {

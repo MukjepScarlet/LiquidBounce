@@ -1,7 +1,7 @@
 <script lang="ts">
     import {createEventDispatcher} from "svelte";
-    import type {BindModifier, BindSetting, ModuleSetting} from "../../../integration/types";
-    import {listen} from "../../../integration/ws";
+    import type {BindModifier, BindSetting, ModuleSetting, Screen} from "../../../integration/types";
+    import {listen, waitNext} from "../../../integration/ws";
     import {getPrintableKeyName} from "../../../integration/rest";
     import type {KeyboardKeyEvent, MouseButtonEvent} from "../../../integration/events";
     import {convertToSpacedString, spaceSeperatedNames} from "../../../theme/theme_config";
@@ -29,61 +29,51 @@
         }
     }
 
-    listen("keyboardKey", async (e: KeyboardKeyEvent) => {
-        if (e.screen === undefined || !e.screen.class.startsWith("net.ccbluex.liquidbounce") ||
-            !(e.screen.title === "ClickGUI" || e.screen.title === "VS-CLICKGUI")) {
-            return;
-        }
-
-        if (!binding) {
-            return;
-        }
-
-        binding = false;
-
-        if (e.keyCode !== 256) {
-            cSetting.value.boundKey = e.key;
-        } else {
-            cSetting.value.boundKey = UNKNOWN_KEY;
-        }
-
-        setting = {...cSetting};
-
-        dispatch("change");
-    });
-
-    listen("mouseButton", async (e: MouseButtonEvent) => {
-        if (e.screen === undefined || !e.screen.class.startsWith("net.ccbluex.liquidbounce") ||
-            !(e.screen.title === "ClickGUI" || e.screen.title === "VS-CLICKGUI")) {
-            return;
-        }
-
-        if (!binding || (e.button === 0 && isHovered)) {
-            return;
-        }
-
-        binding = false;
-
-        cSetting.value.boundKey = e.key;
-
-        setting = {...cSetting};
-
-        dispatch("change");
-    })
+    const isClickGuiScreen = (screen: Screen | undefined) =>
+        !(screen === undefined || !screen.class.startsWith("net.ccbluex.liquidbounce") || screen.title !== "ClickGUI" && screen.title !== "VS-CLICKGUI")
 
     async function toggleBinding() {
+        // Binding progress -> cancel it
         if (binding) {
-            cSetting.value.boundKey = UNKNOWN_KEY;
+            handleActionChange(UNKNOWN_KEY);
+            return;
         }
 
-        binding = !binding;
+        binding = true;
 
-        setting = {...cSetting};
+        const firstIncomingEvent = await Promise.any([
+            waitNext("mouseButton", (e: MouseButtonEvent) =>
+                isClickGuiScreen(e.screen) && !(e.button === 0 /* LMB */ && isHovered)
+            ),
+            waitNext("keyboardKey", (e: KeyboardKeyEvent) =>
+                isClickGuiScreen(e.screen)
+            ),
+        ]);
 
-        dispatch("change");
+        // Promise doesn't support cancellation, so we need manual check
+        if (!binding) return;
+
+        if (Object.hasOwn(firstIncomingEvent, 'keyCode')) {
+            const e = firstIncomingEvent as KeyboardKeyEvent;
+            if (e.keyCode === 256 /* GLFW_KEY_ESCAPE */) {
+                handleActionChange(UNKNOWN_KEY);
+                return;
+            }
+
+            handleActionChange(e.key);
+            return;
+        } else if (Object.hasOwn(firstIncomingEvent, 'button')) {
+            const e = firstIncomingEvent as MouseButtonEvent;
+            handleActionChange(e.key);
+            return;
+        } else {
+            throw new Error("Unexcepted event: " + JSON.stringify(firstIncomingEvent));
+        }
     }
 
-    function handleActionChange() {
+    function handleActionChange(newBoundKey: string) {
+        cSetting.value.boundKey = newBoundKey;
+        binding = false;
         setting = {...cSetting};
         dispatch("change");
     }
@@ -97,6 +87,10 @@
     }
 
     const ALL_MODIFIERS = ["Shift", "Control", "Alt", "Super"] as const;
+
+    /**
+     *
+     */
 </script>
 
 <div class="setting" class:has-value={cSetting.value.boundKey !== UNKNOWN_KEY}>
@@ -115,7 +109,7 @@
                 <span>{printableKeyName}</span>
             {/if}
         {:else}
-            <span>Press any key</span>
+            <span>Press any key...</span>
         {/if}
     </button>
 
