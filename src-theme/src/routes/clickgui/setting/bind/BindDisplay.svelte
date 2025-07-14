@@ -23,13 +23,21 @@
                 }
             default: return modifier;
         }
-    })
+    });
 </script>
 
 <span class="wrapper">
     {#if boundKey}
         {#each modifiers as modifier (modifier)}
-            <span>{modifier}</span>
+            <span>
+                {#await getRenderString(modifier)}
+                    {modifier}
+                {:then osModifier}
+                    {osModifier}
+                {:catch error}
+                    {modifier}
+                {/await}
+            </span>
             <span class="divider">+</span>
         {/each}
         <span class="boundKey">{boundKey}</span>
