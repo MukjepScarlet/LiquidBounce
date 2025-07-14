@@ -8,6 +8,26 @@
     import BindDisplay from "./BindDisplay.svelte";
     import SwitchBindAction from "./SwitchBindAction.svelte";
 
+    /**
+     * https://www.glfw.org/docs/3.3/group__keys.html
+     */
+    const KEY_TOKEN_TO_MODIFIERS: Record<number, BindModifier> = {
+        340: "Shift", 344: "Shift",
+        341: "Control", 345: "Control",
+        342: "Alt", 346: "Alt",
+        343: "Super", 347: "Super",
+    } as const;
+
+    /**
+     * From Minecraft InputUtil.Type
+     */
+    const KEY_CODE_TO_MODIFIERS: Record<string, BindModifier> = {
+        "key.keyboard.left.shift": "Shift", "key.keyboard.right.shift": "Shift",
+        "key.keyboard.left.control": "Control", "key.keyboard.right.control": "Control",
+        "key.keyboard.left.alt": "Alt", "key.keyboard.right.alt": "Alt",
+        "key.keyboard.left.win": "Super", "key.keyboard.right.win": "Super",
+    } as const;
+
     export let setting: ModuleSetting;
 
     const cSetting = setting as BindSetting;
@@ -78,6 +98,7 @@
     }
 
     let timeout: ReturnType<typeof setTimeout> | undefined = undefined;
+
     onDestroy(() => {
         if (timeout !== undefined) {
             clearTimeout(timeout);
@@ -132,26 +153,6 @@
         setting = {...cSetting};
         dispatch("change");
     }
-
-    /**
-     * https://www.glfw.org/docs/3.3/group__keys.html
-     */
-    const KEY_TOKEN_TO_MODIFIERS: Record<number, BindModifier> = {
-        340: "Shift", 344: "Shift",
-        341: "Control", 345: "Control",
-        342: "Alt", 346: "Alt",
-        343: "Super", 347: "Super",
-    } as const;
-
-    /**
-     * From Minecraft InputUtil.Type
-     */
-    const KEY_CODE_TO_MODIFIERS: Record<string, BindModifier> = {
-        "key.keyboard.left.shift": "Shift", "key.keyboard.right.shift": "Shift",
-        "key.keyboard.left.control": "Control", "key.keyboard.right.control": "Control",
-        "key.keyboard.left.alt": "Alt", "key.keyboard.right.alt": "Alt",
-        "key.keyboard.left.win": "Super", "key.keyboard.right.win": "Super",
-    } as const;
 </script>
 
 <div class="setting" class:has-value={cSetting.value.boundKey !== UNKNOWN_KEY}>
@@ -161,45 +162,71 @@
             on:mouseenter={() => isHovered = true}
             on:mouseleave={() => isHovered = false}
     >
-        {#if !binding}
-            {#if cSetting.value.modifiers.length < 3}
-                <div class="name">{$spaceSeperatedNames ? convertToSpacedString(cSetting.name) : cSetting.name}:</div>
+        <div class="bind-header">
+            <div class="name">{$spaceSeperatedNames ? convertToSpacedString(cSetting.name) : cSetting.name}</div>
+            <div class="action">
+                {#if cSetting.value.boundKey !== UNKNOWN_KEY}
+                    <SwitchBindAction
+                            bind:action={cSetting.value.action}
+                            on:change={handleChange}
+                    />
+                {:else}
+                    <div class="placeholder">&nbsp;</div>
+                {/if}
+            </div>
+        </div>
+
+        <span class="bind">
+            {#if !binding}
+                <BindDisplay
+                        bind:modifiers={cSetting.value.modifiers}
+                        bind:boundKey={printableKeyName}
+                />
+            {:else if addedModifiers.size}
+                <BindDisplay
+                        bind:modifiers={addedModifiers}
+                        boundKey="..."
+                />
+            {:else}
+                <span>Press any key...</span>
             {/if}
-
-            <BindDisplay
-                    bind:modifiers={cSetting.value.modifiers}
-                    bind:boundKey={printableKeyName}
-            />
-        {:else if addedModifiers.size}
-            <BindDisplay
-                    bind:modifiers={addedModifiers}
-                    boundKey="..."
-            />
-        {:else}
-            <span>Press any key...</span>
-        {/if}
+        </span>
     </button>
-
-    {#if cSetting.value.boundKey !== UNKNOWN_KEY}
-        <SwitchBindAction
-                bind:action={cSetting.value.action}
-                on:change={handleChange}
-        />
-    {/if}
 </div>
 
 <style lang="scss">
   @use "../../../../colors" as *;
 
+  .bind-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: relative;
+
+    .name {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      white-space: nowrap;
+      pointer-events: none;
+    }
+
+    .action {
+      margin-left: auto;
+
+      &.placeholder {
+        width: 0;
+      }
+    }
+  }
+
+  .bind {
+    display: flex;
+    justify-content: center;
+  }
+
   .setting {
     padding: 7px 0;
-    display: grid;
-    grid-template-columns: 1fr;
-    column-gap: 5px;
-
-    &.has-value {
-      grid-template-columns: 1fr max-content;
-    }
   }
 
   .change-bind {
@@ -213,14 +240,5 @@
     font-size: 12px;
     font-family: "Inter", sans-serif;
     width: 100%;
-    display: flex;
-    justify-content: center;
-    column-gap: 5px;
-
-    .name {
-      display: inline-flex;
-      align-items: center;
-      font-weight: 500;
-    }
   }
 </style>

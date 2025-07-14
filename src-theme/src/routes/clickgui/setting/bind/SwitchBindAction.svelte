@@ -1,6 +1,7 @@
 <script lang="ts">
     import type {BindAction} from "../../../../integration/types";
     import {createEventDispatcher} from "svelte";
+    import ExpandArrow from "../common/ExpandArrow.svelte";
 
     export let action: BindAction;
 
@@ -24,30 +25,37 @@
     }
 </script>
 
-<button class="action" on:click={switchAction}>
-    <span>{action}</span>
+<button on:click|stopPropagation={switchAction}>
+    <span class="action">{action}</span>
+    <ExpandArrow
+            expanded={false}
+            expandable={false}
+            compact={true}
+            dimmed={true}
+    />
 </button>
 
 <style lang="scss">
   @use "../../../../colors" as *;
 
   .action {
+    font-weight: 500;
+    color: $clickgui-text-color;
+    font-size: 12px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  button {
     all: unset;
-    background-color: $accent-color;
-    padding: 6px 10px;
+    background: none;
+    padding: 0;
     cursor: pointer;
     display: flex;
+    gap: 3px;
     align-items: center;
     position: relative;
-    border-radius: 3px;
-
-    span {
-      font-weight: 500;
-      color: $clickgui-text-color;
-      font-size: 12px;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
+    border: none;
   }
 </style>
