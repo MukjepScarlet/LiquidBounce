@@ -18,25 +18,11 @@
  *
  *
  */
-package net.ccbluex.liquidbounce.features.module.modules.player.antivoid.mode
 
-import net.ccbluex.liquidbounce.config.types.ChoiceConfigurable
-import net.ccbluex.liquidbounce.features.module.modules.player.antivoid.ModuleAntiVoid
+package net.ccbluex.liquidbounce.api.thirdparty.translator
 
-object AntiVoidFlagMode : AntiVoidMode("Flag") {
+import net.ccbluex.liquidbounce.config.types.Choice
 
-    private val fallDistance by float("FallDistance", 0.5f, 0.0f..6.0f)
-
-    override val parent: ChoiceConfigurable<*>
-        get() = ModuleAntiVoid.mode
-
-    override fun rescue(): Boolean {
-        if (player.fallDistance >= fallDistance) {
-            player.setPosition(player.pos.add(0.0, 0.42, 0.0))
-            return true
-        }
-
-        return false
-    }
-
-}
+abstract class TranslatorChoice(
+    name: String
+) : Choice(name), TranslatorApi
