@@ -1,9 +1,9 @@
 <script lang="ts">
     import type {BindAction} from "../../../../integration/types";
     import {createEventDispatcher} from "svelte";
+    import ExpandArrow from "../common/ExpandArrow.svelte";
 
     export let action: BindAction;
-    export let compact: boolean;
 
     const dispatch = createEventDispatcher();
 
@@ -25,8 +25,14 @@
     }
 </script>
 
-<button on:click={switchAction} class:compact>
+<button on:click|stopPropagation={switchAction}>
     <span class="action">{action}</span>
+    <ExpandArrow
+            expanded={false}
+            expandable={false}
+            compact={true}
+            dimmed={true}
+    />
 </button>
 
 <style lang="scss">
@@ -43,18 +49,13 @@
 
   button {
     all: unset;
-    background-color: $accent-color;
-    padding: 6px 10px;
+    background: none;
+    padding: 0;
     cursor: pointer;
     display: flex;
+    gap: 3px;
     align-items: center;
     position: relative;
-    border-radius: 3px;
-
-    &.compact {
-      padding: 0;
-      border: none;
-      background: none;
-    }
+    border: none;
   }
 </style>

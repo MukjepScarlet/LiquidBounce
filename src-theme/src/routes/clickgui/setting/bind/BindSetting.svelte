@@ -162,44 +162,71 @@
             on:mouseenter={() => isHovered = true}
             on:mouseleave={() => isHovered = false}
     >
-        {#if !binding}
-            <div class="name">{$spaceSeperatedNames ? convertToSpacedString(cSetting.name) : cSetting.name}:</div>
+        <div class="bind-header">
+            <div class="name">{$spaceSeperatedNames ? convertToSpacedString(cSetting.name) : cSetting.name}</div>
+            <div class="action">
+                {#if cSetting.value.boundKey !== UNKNOWN_KEY}
+                    <SwitchBindAction
+                            bind:action={cSetting.value.action}
+                            on:change={handleChange}
+                    />
+                {:else}
+                    <div class="placeholder">&nbsp;</div>
+                {/if}
+            </div>
+        </div>
 
-            <BindDisplay
-                    bind:modifiers={cSetting.value.modifiers}
-                    bind:boundKey={printableKeyName}
-            />
-        {:else if addedModifiers.size}
-            <BindDisplay
-                    bind:modifiers={addedModifiers}
-                    boundKey="..."
-            />
-        {:else}
-            <span>Press any key...</span>
-        {/if}
+        <span class="bind">
+            {#if !binding}
+                <BindDisplay
+                        bind:modifiers={cSetting.value.modifiers}
+                        bind:boundKey={printableKeyName}
+                />
+            {:else if addedModifiers.size}
+                <BindDisplay
+                        bind:modifiers={addedModifiers}
+                        boundKey="..."
+                />
+            {:else}
+                <span>Press any key...</span>
+            {/if}
+        </span>
     </button>
-
-    {#if cSetting.value.boundKey !== UNKNOWN_KEY}
-        <SwitchBindAction
-                compact={true}
-                bind:action={cSetting.value.action}
-                on:change={handleChange}
-        />
-    {/if}
 </div>
 
 <style lang="scss">
   @use "../../../../colors" as *;
 
+  .bind-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: relative;
+
+    .name {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      white-space: nowrap;
+      pointer-events: none;
+    }
+
+    .action {
+      margin-left: auto;
+
+      &.placeholder {
+        width: 0;
+      }
+    }
+  }
+
+  .bind {
+    display: flex;
+    justify-content: center;
+  }
+
   .setting {
     padding: 7px 0;
-    display: grid;
-    grid-template-columns: 1fr;
-    column-gap: 5px;
-
-    &.has-value {
-      grid-template-columns: 1fr max-content;
-    }
   }
 
   .change-bind {
@@ -213,14 +240,5 @@
     font-size: 12px;
     font-family: "Inter", sans-serif;
     width: 100%;
-    display: flex;
-    justify-content: center;
-    column-gap: 5px;
-
-    .name {
-      display: inline-flex;
-      align-items: center;
-      font-weight: 500;
-    }
   }
 </style>
