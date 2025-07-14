@@ -376,6 +376,7 @@ export interface Component {
 }
 
 export interface ClientInfo {
+    os: "linux" | "solaris" | "windows" | "mac" | "unknown";
     gameVersion: string;
     clientVersion: string;
     clientName: string;

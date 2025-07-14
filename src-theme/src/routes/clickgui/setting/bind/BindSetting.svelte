@@ -146,7 +146,7 @@
         cSetting.value.modifiers = Array.from(addedModifiers);
         addedModifiers.clear();
         binding = false;
-        handleChange()
+        handleChange();
     }
 
     function handleChange() {
