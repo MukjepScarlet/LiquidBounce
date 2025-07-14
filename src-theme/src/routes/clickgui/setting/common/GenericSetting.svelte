@@ -13,9 +13,8 @@
     import TextSetting from "../TextSetting.svelte";
     import BlocksSetting from "../blocks/BlocksSetting.svelte";
     import {slide} from "svelte/transition";
-    import {onMount} from "svelte";
     import TextArraySetting from "../TextArraySetting.svelte";
-    import BindSetting from "../BindSetting.svelte";
+    import BindSetting from "../bind/BindSetting.svelte";
     import VectorSetting from "../VectorSetting.svelte";
     import KeySetting from "../KeySetting.svelte";
     import MultiChooseSetting from "../MultiChooseSetting.svelte";

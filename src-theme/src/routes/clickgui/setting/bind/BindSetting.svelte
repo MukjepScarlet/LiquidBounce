@@ -1,10 +1,11 @@
 <script lang="ts">
     import {createEventDispatcher, onDestroy} from "svelte";
-    import type {BindModifier, BindSetting, ModuleSetting, Screen} from "../../../integration/types";
-    import {waitMatches} from "../../../integration/ws";
-    import {getPrintableKeyName} from "../../../integration/rest";
-    import type {KeyboardKeyEvent, MouseButtonEvent} from "../../../integration/events";
-    import {convertToSpacedString, spaceSeperatedNames} from "../../../theme/theme_config";
+    import type {BindModifier, BindSetting, ModuleSetting, Screen} from "../../../../integration/types";
+    import {waitMatches} from "../../../../integration/ws";
+    import {getPrintableKeyName} from "../../../../integration/rest";
+    import type {KeyboardKeyEvent, MouseButtonEvent} from "../../../../integration/events";
+    import {convertToSpacedString, spaceSeperatedNames} from "../../../../theme/theme_config";
+    import BindDisplay from "./BindDisplay.svelte";
 
     export let setting: ModuleSetting;
 
@@ -16,7 +17,7 @@
 
     let isHovered = false;
     let binding = false;
-    let printableKeyName = "";
+    let printableKeyName: string | undefined;
 
     $: {
         if (cSetting.value.boundKey !== UNKNOWN_KEY) {
@@ -24,6 +25,8 @@
                 .then(printableKey => {
                     printableKeyName = printableKey.localized;
                 });
+        } else {
+            printableKeyName = undefined;
         }
     }
 
@@ -174,18 +177,15 @@
                 <div class="name">{$spaceSeperatedNames ? convertToSpacedString(cSetting.name) : cSetting.name}:</div>
             {/if}
 
-            {#if cSetting.value.boundKey === UNKNOWN_KEY}
-                <span class="none">None</span>
-            {:else}
-                <span>
-                    {#if cSetting.value.modifiers.length}
-                        {cSetting.value.modifiers.join(" + ") + " + "}
-                    {/if}
-                    {printableKeyName}
-                </span>
-            {/if}
+            <BindDisplay
+                    bind:modifiers={cSetting.value.modifiers}
+                    bind:boundKey={printableKeyName}
+            />
         {:else if addedModifiers.size}
-            <span>{Array.from(addedModifiers).join(" + ")} + ...</span>
+            <BindDisplay
+                    bind:modifiers={addedModifiers}
+                    boundKey="..."
+            />
         {:else}
             <span>Press any key...</span>
         {/if}
@@ -199,7 +199,7 @@
 </div>
 
 <style lang="scss">
-  @use "../../../colors.scss" as *;
+  @use "../../../../colors" as *;
 
   .setting {
     padding: 7px 0;
