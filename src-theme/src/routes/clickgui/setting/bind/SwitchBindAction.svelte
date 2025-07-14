@@ -3,6 +3,7 @@
     import {createEventDispatcher} from "svelte";
 
     export let action: BindAction;
+    export let compact: boolean;
 
     const dispatch = createEventDispatcher();
 
@@ -24,14 +25,23 @@
     }
 </script>
 
-<button class="action" on:click={switchAction}>
-    <span>{action}</span>
+<button on:click={switchAction} class:compact>
+    <span class="action">{action}</span>
 </button>
 
 <style lang="scss">
   @use "../../../../colors" as *;
 
   .action {
+    font-weight: 500;
+    color: $clickgui-text-color;
+    font-size: 12px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  button {
     all: unset;
     background-color: $accent-color;
     padding: 6px 10px;
@@ -41,13 +51,10 @@
     position: relative;
     border-radius: 3px;
 
-    span {
-      font-weight: 500;
-      color: $clickgui-text-color;
-      font-size: 12px;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
+    &.compact {
+      padding: 0;
+      border: none;
+      background: none;
     }
   }
 </style>
