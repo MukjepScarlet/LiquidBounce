@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.event.events.KeyboardKeyEvent
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.kotlin.emptyEnumSet
 import net.minecraft.client.util.InputUtil
+import net.minecraft.util.Util
 import org.lwjgl.glfw.GLFW
 import java.util.EnumSet
 
@@ -190,6 +191,22 @@ data class InputBind(
          * Check if any one modifier key is pressed.
          */
         val isAnyPressed: Boolean get() = this.keyCodes.any { InputUtil.isKeyPressed(mc.window.handle, it) }
+
+        val platformRenderName: String get() = when (Util.getOperatingSystem()) {
+            Util.OperatingSystem.OSX -> when (this) {
+                CONTROL -> "Ctrl"
+                SUPER -> "\u229e"
+                else -> choiceName
+            }
+            Util.OperatingSystem.WINDOWS -> when (this) {
+                SHIFT -> "\u21e7"
+                CONTROL -> "^"
+                ALT -> "\u2325"
+                SUPER -> "\u2318"
+                // else -> choiceName
+            }
+            else -> choiceName
+        }
 
         companion object {
             @JvmField

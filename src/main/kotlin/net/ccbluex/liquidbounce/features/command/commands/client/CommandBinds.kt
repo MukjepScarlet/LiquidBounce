@@ -94,14 +94,14 @@ object CommandBinds : CommandFactory {
                     .append(regular(": "))
                     .append(
                         inputByName(module.bind.keyName).let { key ->
-                            variable(key.localizedText.copy())
+                            variable(key.localizedText.copy()).bold(true)
                                 .copyable(copyContent = key.translationKey)
                         }
                     )
                     .apply {
                         module.bind.modifiers.forEach {
                             append(regular(" + "))
-                            append(variable(it.choiceName))
+                            append(variable(it.platformRenderName))
                         }
                     }
                     .append(regular(" ("))
