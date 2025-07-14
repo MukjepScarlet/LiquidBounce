@@ -6,6 +6,7 @@
     import type {KeyboardKeyEvent, MouseButtonEvent} from "../../../../integration/events";
     import {convertToSpacedString, spaceSeperatedNames} from "../../../../theme/theme_config";
     import BindDisplay from "./BindDisplay.svelte";
+    import SwitchBindAction from "./SwitchBindAction.svelte";
 
     export let setting: ModuleSetting;
 
@@ -124,22 +125,10 @@
         cSetting.value.modifiers = Array.from(addedModifiers);
         addedModifiers.clear();
         binding = false;
-        setting = {...cSetting};
-        dispatch("change");
+        handleChange()
     }
 
-    /**
-     * Switch action among {@link BindAction}.
-     */
-    function switchAction() {
-        if (cSetting.value.action === "Toggle") {
-            cSetting.value.action = "Hold";
-        } else if (cSetting.value.action === "Hold") {
-            cSetting.value.action = "Toggle";
-        } else {
-            throw new Error("Unexcepted action: " + cSetting.value.action);
-        }
-
+    function handleChange() {
         setting = {...cSetting};
         dispatch("change");
     }
@@ -192,9 +181,10 @@
     </button>
 
     {#if cSetting.value.boundKey !== UNKNOWN_KEY}
-        <button class="action" on:click={switchAction}>
-            <span>{cSetting.value.action}</span>
-        </button>
+        <SwitchBindAction
+                bind:action={cSetting.value.action}
+                on:change={handleChange}
+        />
     {/if}
 </div>
 
@@ -231,30 +221,6 @@
       display: inline-flex;
       align-items: center;
       font-weight: 500;
-    }
-
-    .none {
-      color: $clickgui-text-dimmed-color;
-    }
-  }
-
-  .action {
-    all: unset;
-    background-color: $accent-color;
-    padding: 6px 10px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    position: relative;
-    border-radius: 3px;
-
-    span {
-      font-weight: 500;
-      color: $clickgui-text-color;
-      font-size: 12px;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
     }
   }
 </style>
