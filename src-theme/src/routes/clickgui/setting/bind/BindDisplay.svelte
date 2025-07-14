@@ -16,7 +16,7 @@
 <span class="wrapper">
     {#if boundKey}
         {#each parts as part}
-            <span class:divider='{part === "+"}'>{part}</span>
+            <span class:divider={part === "+"}>{part}</span>
         {/each}
     {:else}
         <span class="dimmed">None</span>
