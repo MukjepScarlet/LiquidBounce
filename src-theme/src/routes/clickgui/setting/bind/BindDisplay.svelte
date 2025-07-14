@@ -16,10 +16,10 @@
 <span class="wrapper">
     {#if boundKey}
         {#each parts as part}
-            <span class:muted={part === "+"}>{part}</span>
+            <span class:divider='{part === "+"}'>{part}</span>
         {/each}
     {:else}
-        <span class="muted">None</span>
+        <span class="dimmed">None</span>
     {/if}
 </span>
 
@@ -28,11 +28,20 @@
 
 
   .wrapper {
-    column-gap: 3px;
+    column-gap: 2px;
     display: flex;
+    align-items: center;
   }
 
-  .muted {
-    color: $clickgui-text-dimmed-color
+  .dimmed {
+    color: $clickgui-text-dimmed-color;
+  }
+
+  .divider {
+    color: $clickgui-text-dimmed-color;
+    opacity: 0.8;
+    font-size: 10px;
+    line-height: 1;
+    font-family: monospace;
   }
 </style>
