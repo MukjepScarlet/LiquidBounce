@@ -29,10 +29,8 @@
     }
 
     onMount(async () => {
-        await (async () => {
-            const info = await getClientInfo();
-            os.set(info.os)
-        })();
+        const info = await getClientInfo();
+        os.set(info.os);
 
         const gameWindow = await getGameWindow();
         minecraftScaleFactor = gameWindow.scaleFactor;
