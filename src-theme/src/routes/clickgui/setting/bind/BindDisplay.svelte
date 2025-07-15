@@ -1,43 +1,44 @@
 <script lang="ts">
     import type {BindModifier} from "../../../../integration/types";
-    import {getClientInfo} from "../../../../integration/rest";
+    import {os} from "../../clickgui_store";
 
     export let modifiers: Iterable<BindModifier>;
     export let boundKey: string | undefined;
 
-    const getRenderString = (modifier: BindModifier) => getClientInfo().then(({ os }) => {
-        switch (os) {
+    const getRenderString = (modifier: BindModifier) => {
+        switch ($os) {
             case "windows":
                 switch (modifier) {
-                    case "Control": return "Ctrl";
-                    case "Super": return "\u229e";
-                    default: return modifier;
+                    case "Control":
+                        return "Ctrl";
+                    case "Super":
+                        return "\u229e";
+                    default:
+                        return modifier;
                 }
             case "mac":
                 switch (modifier) {
-                    case "Shift": return "\u21e7";
-                    case "Control": return "^";
-                    case "Alt": return "\u2325";
-                    case "Super": return "\u2318";
-                    default: return modifier;
+                    case "Shift":
+                        return "\u21e7";
+                    case "Control":
+                        return "^";
+                    case "Alt":
+                        return "\u2325";
+                    case "Super":
+                        return "\u2318";
+                    default:
+                        return modifier;
                 }
-            default: return modifier;
+            default:
+                return modifier;
         }
-    });
+    };
 </script>
 
 <span class="wrapper">
     {#if boundKey}
         {#each modifiers as modifier (modifier)}
-            <span>
-                {#await getRenderString(modifier)}
-                    {modifier}
-                {:then osModifier}
-                    {osModifier}
-                {:catch error}
-                    {modifier}
-                {/await}
-            </span>
+            <span>{getRenderString(modifier)}</span>
             <span class="divider">+</span>
         {/each}
         <span class="boundKey">{boundKey}</span>
