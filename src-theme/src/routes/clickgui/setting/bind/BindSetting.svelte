@@ -167,8 +167,9 @@
             <span class="action">
                 {#if cSetting.value.boundKey !== UNKNOWN_KEY}
                     <SwitchBindAction
-                            bind:action={cSetting.value.action}
-                            on:change={handleChange}
+                            choices={["Toggle", "Hold"]}
+                            bind:chosen={cSetting.value.action}
+                            onchange={handleChange}
                     />
                 {:else}
                     <span class="placeholder">&nbsp;</span>

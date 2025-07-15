@@ -1,32 +1,41 @@
 <script lang="ts">
     import type {BindAction} from "../../../../integration/types";
-    import {createEventDispatcher} from "svelte";
     import ExpandArrow from "../common/ExpandArrow.svelte";
+    import {fly} from "svelte/transition";
+    import {cubicOut} from 'svelte/easing';
 
-    export let action: BindAction;
+    export let choices: BindAction[];
+    export let chosen: typeof choices[number];
+    export let onchange: () => any;
 
-    const dispatch = createEventDispatcher();
-
-    const bindActions: BindAction[] = ["Toggle", "Hold"];
+    let direction = 1;
 
     /**
-     * Switch action among {@link BindAction}.
+     * Switch item among {@link choices}.
      */
     function switchAction() {
-        const currentIndex = bindActions.indexOf(action);
+        const currentIndex = choices.indexOf(chosen);
         if (currentIndex === -1) {
-            throw new Error("Unexpected action: " + action);
+            throw new Error("Unexpected action: " + chosen);
         }
 
-        const nextIndex = (currentIndex + 1) % bindActions.length;
-        action = bindActions[nextIndex];
+        const nextIndex = (currentIndex + direction) % choices.length;
+        chosen = choices[nextIndex];
 
-        dispatch("change");
+        onchange();
     }
 </script>
 
 <button on:click|stopPropagation={switchAction}>
-    <span class="action">{action}</span>
+    <span class="chosen-holder">
+        {#key chosen}
+            <span
+                    class="chosen"
+                    in:fly={{ x: direction * 20, duration: 200, delay: 200, easing: cubicOut }}
+                    out:fly={{ x: -direction * 20, duration: 200, easing: cubicOut }}
+            >{chosen}</span>
+        {/key}
+    </span>
     <ExpandArrow
             expanded={false}
             expandable={false}
@@ -38,13 +47,18 @@
 <style lang="scss">
   @use "../../../../colors" as *;
 
-  .action {
-    font-weight: 500;
-    color: $clickgui-text-color;
-    font-size: 12px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+  .chosen-holder {
+    display: grid;
+
+    .chosen {
+      font-weight: 500;
+      color: $clickgui-text-color;
+      font-size: 12px;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      grid-column: 1/1;
+      grid-row: 1/1;
+    }
   }
 
   button {
