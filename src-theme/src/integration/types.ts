@@ -375,8 +375,10 @@ export interface Component {
     settings: { [name: string]: any };
 }
 
+export type OS = "linux" | "solaris" | "windows" | "mac" | "unknown";
+
 export interface ClientInfo {
-    os: "linux" | "solaris" | "windows" | "mac" | "unknown";
+    os: OS;
     gameVersion: string;
     clientVersion: string;
     clientName: string;

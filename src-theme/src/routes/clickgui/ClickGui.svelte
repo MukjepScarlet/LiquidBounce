@@ -1,6 +1,6 @@
 <script lang="ts">
     import {onMount} from "svelte";
-    import {getGameWindow, getModules, getModuleSettings, setTyping} from "../../integration/rest";
+    import {getClientInfo, getGameWindow, getModules, getModuleSettings, setTyping} from "../../integration/rest";
     import {groupByCategory} from "../../integration/util";
     import type {ConfigurableSetting, GroupedModules, Module, TogglableSetting} from "../../integration/types";
     import Panel from "./Panel.svelte";
@@ -9,7 +9,7 @@
     import {fade} from "svelte/transition";
     import {listen} from "../../integration/ws";
     import type {ClickGuiValueChangeEvent, ScaleFactorChangeEvent} from "../../integration/events";
-    import {gridSize, scaleFactor, showGrid, snappingEnabled} from "./clickgui_store";
+    import {gridSize, os, scaleFactor, showGrid, snappingEnabled} from "./clickgui_store";
 
     let categories: GroupedModules = {};
     let modules: Module[] = [];
@@ -29,6 +29,9 @@
     }
 
     onMount(async () => {
+        const info = await getClientInfo();
+        os.set(info.os);
+
         const gameWindow = await getGameWindow();
         minecraftScaleFactor = gameWindow.scaleFactor;
 
