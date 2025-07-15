@@ -176,11 +176,7 @@ data class InputBind(
         SHIFT("Shift", GLFW.GLFW_MOD_SHIFT, InputUtil.GLFW_KEY_LEFT_SHIFT, InputUtil.GLFW_KEY_RIGHT_SHIFT),
         CONTROL("Control", GLFW.GLFW_MOD_CONTROL, InputUtil.GLFW_KEY_LEFT_CONTROL, InputUtil.GLFW_KEY_RIGHT_CONTROL),
         ALT("Alt", GLFW.GLFW_MOD_ALT, InputUtil.GLFW_KEY_LEFT_ALT, InputUtil.GLFW_KEY_RIGHT_ALT),
-        SUPER("Super", GLFW.GLFW_MOD_SUPER, InputUtil.GLFW_KEY_LEFT_SUPER, InputUtil.GLFW_KEY_RIGHT_SUPER),
-        // TODO: the two modifiers are not included in event modifiers?
-//        CAPS_LOCK("CapsLock", GLFW.GLFW_MOD_CAPS_LOCK, InputUtil.GLFW_KEY_CAPS_LOCK),
-//        NUM_LOCK("NumLock", GLFW.GLFW_MOD_NUM_LOCK, InputUtil.GLFW_KEY_NUM_LOCK),
-        ;
+        SUPER("Super", GLFW.GLFW_MOD_SUPER, InputUtil.GLFW_KEY_LEFT_SUPER, InputUtil.GLFW_KEY_RIGHT_SUPER);
 
         /**
          * Check if self is active in [modifiers] value.
@@ -192,6 +188,9 @@ data class InputBind(
          */
         val isAnyPressed: Boolean get() = this.keyCodes.any { InputUtil.isKeyPressed(mc.window.handle, it) }
 
+        /**
+         * Performs the platform (OS) specified render name of a modifier.
+         */
         val platformRenderName: String get() = when (Util.getOperatingSystem()) {
             Util.OperatingSystem.OSX -> when (this) {
                 CONTROL -> "Ctrl"
