@@ -162,19 +162,19 @@
             on:mouseenter={() => isHovered = true}
             on:mouseleave={() => isHovered = false}
     >
-        <div class="bind-header">
-            <div class="name">{$spaceSeperatedNames ? convertToSpacedString(cSetting.name) : cSetting.name}</div>
-            <div class="action">
+        <span class="bind-header">
+            <span class="name">{$spaceSeperatedNames ? convertToSpacedString(cSetting.name) : cSetting.name}</span>
+            <span class="action">
                 {#if cSetting.value.boundKey !== UNKNOWN_KEY}
                     <SwitchBindAction
                             bind:action={cSetting.value.action}
                             on:change={handleChange}
                     />
                 {:else}
-                    <div class="placeholder">&nbsp;</div>
+                    <span class="placeholder">&nbsp;</span>
                 {/if}
-            </div>
-        </div>
+            </span>
+        </span>
 
         <span class="bind">
             {#if !binding}
