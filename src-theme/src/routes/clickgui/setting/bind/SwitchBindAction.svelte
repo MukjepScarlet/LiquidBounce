@@ -31,8 +31,8 @@
         {#key chosen}
             <span
                     class="chosen"
-                    in:fly={{ x: direction * 20, duration: 200, delay: 200, easing: cubicOut }}
-                    out:fly={{ x: -direction * 20, duration: 200, easing: cubicOut }}
+                    in:fly={{ x: direction * 10, duration: 100, delay: 100, easing: cubicOut }}
+                    out:fly={{ x: -direction * 10, duration: 100, easing: cubicOut }}
             >{chosen}</span>
         {/key}
     </span>
