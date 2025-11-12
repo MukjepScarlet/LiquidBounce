@@ -101,8 +101,8 @@ data class PlayerData(
         fun fromPlayer(player: PlayerEntity) = PlayerData(
             ModuleNameProtect.replace(player.nameForScoreboard),
             player.uuidAsString,
-            player.world.registryKey.value,
-            player.pos,
+            player.entityWorld.registryKey.value,
+            player.entityPos,
             player.netherPosition,
             player.blockPos,
             player.velocity,
@@ -125,7 +125,9 @@ data class PlayerData(
             player.mainHandStack,
             if (player == mc.player && shouldHideOffhand() && hideShieldSlot) ItemStack.EMPTY else player.offHandStack,
             player.armorItems.toList(),
-            if (mc.player === player) ScoreboardData.fromScoreboard(player.scoreboard) else null
+            if (mc.player === player) ScoreboardData.fromScoreboard(
+                player.entityWorld.scoreboard
+            ) else null
         )
     }
 

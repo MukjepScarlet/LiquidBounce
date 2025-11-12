@@ -98,7 +98,7 @@ object AutoFarmAutoWalk : NavigationBaseConfigurable<Vec3d?>(ModuleAutoFarm, "Au
         val blockTarget = findWalkToBlock()
 
         if (toItems.enabled && invHasSpace) {
-            val playerPos = player.pos
+            val playerPos = player.entityPos
             val itemTarget = findWalkToItem() ?: return blockTarget
             blockTarget ?: return itemTarget
 
@@ -112,7 +112,7 @@ object AutoFarmAutoWalk : NavigationBaseConfigurable<Vec3d?>(ModuleAutoFarm, "Au
 
     private fun findWalkToItem(): Vec3d? = world.entities.filter {
         it is ItemEntity && toItems.shouldPickUp(it) && it.squaredDistanceTo(player) < toItems.rangeSquared
-    }.minByOrNull { it.squaredDistanceTo(player) }?.pos
+    }.minByOrNull { it.squaredDistanceTo(player) }?.entityPos
 
     @Suppress("EmptyFunctionBlock")
     override fun createNavigationContext(): Vec3d? {
