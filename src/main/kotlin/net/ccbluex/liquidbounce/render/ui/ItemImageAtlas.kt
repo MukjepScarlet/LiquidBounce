@@ -39,7 +39,6 @@ import net.ccbluex.liquidbounce.utils.render.toNativeImage
 import net.minecraft.client.render.DiffuseLighting
 import net.minecraft.client.render.OverlayTexture
 import net.minecraft.client.render.ProjectionMatrix2
-import net.minecraft.client.render.VertexConsumerProvider
 import net.minecraft.client.render.item.KeyedItemRenderState
 import net.minecraft.client.texture.NativeImage
 import net.minecraft.client.util.BufferAllocator
@@ -213,9 +212,10 @@ private class ItemTextureRenderer(
         itemPixelSize: Int,
     ) {
 		matrices.push()
+        val tlY = scaledY.toFloat() + itemPixelSize.toFloat() * 0.5F
         matrices.translate(
             scaledX.toFloat() + itemPixelSize.toFloat() * 0.5F,
-            scaledY.toFloat() + itemPixelSize.toFloat() * 0.5F,
+            tlY,
             0.0f,
         )
         matrices.scale(itemPixelSize.toFloat(), -itemPixelSize.toFloat(), itemPixelSize.toFloat())
@@ -226,12 +226,8 @@ private class ItemTextureRenderer(
 			mc.gameRenderer.diffuseLighting.setShaderLights(DiffuseLighting.Type.ITEMS_3D)
 		}
 
-        val vertexConsumers = VertexConsumerProvider.immediate(this.bufferAllocator)
-
-        // TODO(1.21.10-port): the scissor is present in GuiRenderer's function but idk if we need it
-//		RenderSystem.enableScissorForRenderTypeDraws(x, itemAtlasTexture.getHeight(0) - y - scale, scale, scale)
-        // TODO(1.21.10-port): seems like only gameRenderer makes a render command queue
-        // use `OrderedRenderCommandQueueImpl`'s constructor if we need to make a new one
+		RenderSystem.enableScissorForRenderTypeDraws(scaledY,
+            (itemAtlasTexture.getHeight(0) - tlY).toInt(), scale, scale)
 		state.render(
             matrices,
             mc.gameRenderer.entityRenderCommandQueue,
@@ -239,8 +235,7 @@ private class ItemTextureRenderer(
             OverlayTexture.DEFAULT_UV,
             0
         )
-		vertexConsumers.draw()
-//		RenderSystem.disableScissorForRenderTypeDraws()
+		RenderSystem.disableScissorForRenderTypeDraws()
 		matrices.pop()
     }
 
