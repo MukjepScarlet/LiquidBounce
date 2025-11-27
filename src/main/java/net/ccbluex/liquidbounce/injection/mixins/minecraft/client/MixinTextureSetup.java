@@ -22,8 +22,8 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.client;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.mojang.blaze3d.textures.GpuTextureView;
-import it.unimi.dsi.fastutil.objects.Reference2ObjectArrayMap;
 import it.unimi.dsi.fastutil.objects.Reference2ObjectOpenHashMap;
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleCustomAmbience;
 import net.minecraft.client.texture.TextureSetup;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
@@ -35,22 +35,36 @@ import java.util.Map;
 public abstract class MixinTextureSetup {
 
     @Unique
-    private static final Map<GpuTextureView, Map<GpuTextureView, TextureSetup>> $textureSetupCache = new Reference2ObjectArrayMap<>();
+    private static final Map<GpuTextureView, TextureSetup> $textureSetupCache$withoutGlTexture = new Reference2ObjectOpenHashMap<>();
 
     /**
      * Cache the TextureSetup for the given GpuTextureView.
      */
     @WrapOperation(
+        method = "withoutGlTexture(Lcom/mojang/blaze3d/textures/GpuTextureView;)Lnet/minecraft/client/texture/TextureSetup;",
+        at = @At(value = "NEW", target = "(Lcom/mojang/blaze3d/textures/GpuTextureView;Lcom/mojang/blaze3d/textures/GpuTextureView;Lcom/mojang/blaze3d/textures/GpuTextureView;)Lnet/minecraft/client/texture/TextureSetup;")
+    )
+    private static TextureSetup cacheInit0(
+        GpuTextureView gpuTextureView, GpuTextureView gpuTextureView2,
+        GpuTextureView gpuTextureView3, Operation<TextureSetup> original) {
+        // original call
+        // return new TextureSetup(texture, null, null);
+        assert gpuTextureView2 == null;
+        assert gpuTextureView3 == null;
+        if (gpuTextureView == null) return TextureSetup.empty();
+        return $textureSetupCache$withoutGlTexture.computeIfAbsent(gpuTextureView, k -> original.call(k, null, null));
+    }
+
+    @WrapOperation(
         method = "of(Lcom/mojang/blaze3d/textures/GpuTextureView;)Lnet/minecraft/client/texture/TextureSetup;",
         at = @At(value = "NEW", target = "(Lcom/mojang/blaze3d/textures/GpuTextureView;Lcom/mojang/blaze3d/textures/GpuTextureView;Lcom/mojang/blaze3d/textures/GpuTextureView;)Lnet/minecraft/client/texture/TextureSetup;")
     )
-    private static TextureSetup cacheInit(GpuTextureView gpuTextureView, GpuTextureView gpuTextureView2,
-        GpuTextureView gpuTextureView3, Operation<TextureSetup> original) {
-        // original call
-        // return new TextureSetup(texture, (GpuTextureView)null, MinecraftClient.getInstance().gameRenderer.getLightmapTextureManager().getGlTextureView());
-        assert gpuTextureView2 == null;
-        return $textureSetupCache.computeIfAbsent(gpuTextureView3, k -> new Reference2ObjectOpenHashMap<>())
-            .computeIfAbsent(gpuTextureView, k -> original.call(k, null, gpuTextureView3));
+    private static TextureSetup customAmbienceCustomLight$texture(GpuTextureView gpuTextureView, GpuTextureView gpuTextureView2, GpuTextureView gpuTextureView3, Operation<TextureSetup> original) {
+//        var instance = ModuleCustomAmbience.CustomLightColor.INSTANCE;
+//        if (instance.getRunning()) {
+//            gpuTextureView3 = instance.getTextureView();
+//        }
+        return original.call(gpuTextureView, gpuTextureView2, gpuTextureView3);
     }
 
 }
