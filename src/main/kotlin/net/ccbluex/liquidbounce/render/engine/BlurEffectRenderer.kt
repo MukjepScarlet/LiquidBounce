@@ -18,7 +18,6 @@
  */
 package net.ccbluex.liquidbounce.render.engine
 
-import com.mojang.blaze3d.buffers.GpuBuffer
 import com.mojang.blaze3d.systems.RenderSystem
 import com.mojang.blaze3d.textures.FilterMode
 import com.mojang.blaze3d.vertex.VertexFormat
@@ -31,21 +30,20 @@ import net.ccbluex.liquidbounce.features.module.MinecraftShortcuts
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleHud
 import net.ccbluex.liquidbounce.render.ClientRenderPipelines
 import net.ccbluex.liquidbounce.render.buffer.MinecraftFramebuffer
+import net.ccbluex.liquidbounce.render.createRenderPass
 import net.ccbluex.liquidbounce.render.drawFullScreenPositionTexture
-import net.ccbluex.liquidbounce.render.newRenderPass
 import net.ccbluex.liquidbounce.render.ui.ItemImageAtlas
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.math.Easing
 import net.ccbluex.liquidbounce.utils.render.clearColor
 import net.ccbluex.liquidbounce.utils.render.clearDepth
-import net.ccbluex.liquidbounce.utils.render.std140Size
+import net.ccbluex.liquidbounce.utils.render.createUbo
 import net.ccbluex.liquidbounce.utils.render.writeStd140
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.gl.SimpleFramebuffer
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.ChatScreen
 import net.minecraft.client.input.SystemKeycodes
-import java.util.*
 
 object BlurEffectRenderer : MinecraftShortcuts, EventListener {
 
@@ -90,6 +88,10 @@ object BlurEffectRenderer : MinecraftShortcuts, EventListener {
 
             // TODO: GlobalFramebuffer is incompatible with OSX
             if (!SystemKeycodes.IS_MAC_OS) {
+                RenderSystem.outputColorTextureOverride = this.overlayFramebuffer.colorAttachmentView
+                RenderSystem.outputDepthTextureOverride = this.overlayFramebuffer.depthAttachmentView
+            } else {
+                // TODO: GlobalFramebuffer is incompatible with OSX
                 val framebufferWrapper = MinecraftFramebuffer(this.overlayFramebuffer)
                 framebufferWrapper.beginWrite(viewport = true, clear = false)
             }
@@ -98,10 +100,9 @@ object BlurEffectRenderer : MinecraftShortcuts, EventListener {
         callEvent(OverlayRenderEvent(context, tickDelta))
     }
 
-    private val GUI_BLUR_UNIFORM_BUFFER = gpuDevice.createBuffer(
-        { "GUI blur UBO" },
-        GpuBuffer.USAGE_UNIFORM or GpuBuffer.USAGE_MAP_WRITE,
-        std140Size { float + float + float },
+    private val GUI_BLUR_UNIFORM_BUFFER = gpuDevice.createUbo(
+        labelGetter = { "GUI blur UBO" },
+        std140Size = { float + float + float },
     ).slice()
 
     fun endOverlayDrawing() {
@@ -111,7 +112,10 @@ object BlurEffectRenderer : MinecraftShortcuts, EventListener {
 
         this.isDrawingHudFramebuffer = false
 
-        if (!SystemKeycodes.IS_MAC_OS) {
+        if (SystemKeycodes.IS_MAC_OS) {
+            RenderSystem.outputColorTextureOverride = null
+            RenderSystem.outputDepthTextureOverride = null
+        } else {
             val framebufferWrapper = MinecraftFramebuffer(this.overlayFramebuffer)
             framebufferWrapper.end()
         }
@@ -123,7 +127,7 @@ object BlurEffectRenderer : MinecraftShortcuts, EventListener {
             putFloat(ModuleHud.Blur.alphaBlendRange.endInclusive)
         }
 
-        newRenderPass(mc.framebuffer).use { pass ->
+        mc.framebuffer.createRenderPass().use { pass ->
             pass.setPipeline(ClientRenderPipelines.GuiBlur)
             pass.bindSampler("texture0", mc.framebuffer.colorAttachmentView)
             pass.bindSampler("overlay", overlayFramebuffer.colorAttachmentView)
@@ -144,10 +148,8 @@ object BlurEffectRenderer : MinecraftShortcuts, EventListener {
         val indexBuffer = shapeIndexBuffer.getIndexBuffer(6)
 //        val vertexBuffer = RenderSystem.getQuadVertexBuffer()
 
-        gpuDevice.createCommandEncoder().createRenderPass(
+        mc.framebuffer.colorAttachmentView!!.createRenderPass(
             { "GUI blur overlay blit pass" },
-            mc.framebuffer.colorAttachmentView,
-            OptionalInt.empty()
         ).use { renderPass ->
             renderPass.setPipeline(ClientRenderPipelines.JCEF.Blit)
             RenderSystem.bindDefaultUniforms(renderPass)
