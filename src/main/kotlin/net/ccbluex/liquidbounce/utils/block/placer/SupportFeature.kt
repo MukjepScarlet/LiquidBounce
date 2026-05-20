@@ -77,7 +77,7 @@ class SupportFeature(val placer: BlockPlacer) : ToggleableValueGroup(placer, "Su
                             // this useless because we already search the shortest path under all structure blocks?
                             queuedBlocks.contains(neighbor.asLong()) ||
                             neighbor.distManhattan(targetPos) > depth ||
-                            player.eyePosition.distanceToSqr(neighbor.center) > rangeSq ||
+                            neighbor.distToCenterSqr(player.eyePosition) > rangeSq ||
                             neighbor.isBlockedByEntities()
                         ) {
                             continue

@@ -37,6 +37,7 @@ import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.Slots
 import net.ccbluex.liquidbounce.utils.item.isFullBlock
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
+import net.ccbluex.liquidbounce.utils.math.distanceToCenterSqr
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.core.BlockPos
 import net.minecraft.world.item.BlockItem
@@ -105,7 +106,7 @@ object ModuleBedDefender : ClientModule("BedDefender", category = ModuleCategori
         val mutable = BlockPos.MutableBlockPos()
         val placementPositions = blockPos.searchBedLayer(state, maxLayers)
             .filterTo(mutableListOf()) { (_, pos) ->
-                mutable.set(pos).center.distanceToSqr(eyesPos) <= rangeSq
+                eyesPos.distanceToCenterSqr(pos) <= rangeSq
             }
 
         if (placementPositions.isEmpty()) {
