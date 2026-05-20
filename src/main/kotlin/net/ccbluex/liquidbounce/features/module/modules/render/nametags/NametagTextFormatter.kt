@@ -28,12 +28,14 @@ import net.ccbluex.liquidbounce.utils.text.joinToText
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.text.textOf
 import net.ccbluex.liquidbounce.utils.client.withColor
+import net.ccbluex.liquidbounce.utils.collection.asComparator
 import net.ccbluex.liquidbounce.utils.combat.EntityTaggingManager
 import net.ccbluex.liquidbounce.utils.entity.getActualHealth
 import net.ccbluex.liquidbounce.utils.entity.hasHealthScoreboard
 import net.ccbluex.liquidbounce.utils.entity.ping
 import net.ccbluex.liquidbounce.utils.entity.shortName
 import net.ccbluex.liquidbounce.utils.text.PlainText
+import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.ChatFormatting
 import net.minecraft.network.chat.Component
 import net.minecraft.network.chat.Style
@@ -42,6 +44,7 @@ import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.level.GameType
+import java.util.Locale
 import kotlin.math.roundToInt
 
 internal object NametagTextFormatter : ValueGroup("Text") {
@@ -56,6 +59,23 @@ internal object NametagTextFormatter : ValueGroup("Text") {
 
     private val leftBracket = "[".asPlainText(ChatFormatting.GRAY)
     private val rightBracket = "]".asPlainText(ChatFormatting.GRAY)
+
+    object EffectsInference : ValueGroup("EffectsInference") {
+        val enabled by boolean("Enabled", true)
+        val candidates by mobEffects("Candidates", BuiltInRegistries.MOB_EFFECT.toSortedSet(BuiltInRegistries.MOB_EFFECT.asComparator()))
+        val windowTicks by int("WindowTicks", 20, 5..80)
+        val minConfidence by float("MinConfidence", 0.35f, 0.05f..0.95f)
+        val maxDisplayEffects by int("MaxDisplayEffects", 2, 1..5)
+        val maxInferenceDistance by float("MaxInferenceDistance", 120f, 8f..512f, suffix = "m")
+        val updateIntervalTicks by int("UpdateIntervalTicks", 1, 1..3)
+
+        val maxInferenceDistanceSq
+            get() = maxInferenceDistance * maxInferenceDistance
+    }
+
+    init {
+        tree(EffectsInference)
+    }
 
     private val parts by multiEnumChoice(
         "Parts",
@@ -155,6 +175,33 @@ internal object NametagTextFormatter : ValueGroup("Text") {
         BOT_MARK("BotMark") {
             override fun apply(entity: Entity): Component? {
                 return if (entity.isBot) BOT_TEXT else null
+            }
+        },
+
+        EFFECT_INFER("EffectInfer") {
+            override fun apply(entity: Entity): Component? {
+                if (entity !is LivingEntity) return null
+
+                val inferred = NametagEffectsInference.infer(entity)
+                if (inferred.isEmpty()) {
+                    return null
+                }
+
+                val entries = inferred.map { inferredEffect ->
+                    val effectName = inferredEffect.effect.value().descriptionId
+                        .substringAfterLast('.')
+                        .replace('_', ' ')
+                        .replaceFirstChar { it.titlecase(Locale.ROOT) }
+                        .take(4)
+                    val confidence = String.format(Locale.ROOT, "%.2f", inferredEffect.confidence)
+                    "$effectName $confidence".asPlainText(ChatFormatting.GRAY)
+                }
+
+                return textOf(
+                    leftBracket,
+                    entries.joinToText(separator = ", ".asPlainText(ChatFormatting.DARK_GRAY)),
+                    rightBracket
+                )
             }
         };
 

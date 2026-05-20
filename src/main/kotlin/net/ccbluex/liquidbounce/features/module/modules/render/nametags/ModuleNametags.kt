@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render.nametags
 
+import it.unimi.dsi.fastutil.ints.IntOpenHashSet
 import net.ccbluex.fastutil.Pool
 import net.ccbluex.liquidbounce.config.types.CurveValue.Axis.Companion.axis
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
@@ -68,6 +69,7 @@ object ModuleNametags : ClientModule("Nametags", ModuleCategories.RENDER) {
         RenderedEntities.unsubscribe(this)
         nametagPool.recycleAll(nametagsToRender)
         nametagsToRender.clear()
+        NametagEffectsInference.clearAll()
     }
 
     override fun onEnabled() {
@@ -99,7 +101,10 @@ object ModuleNametags : ClientModule("Nametags", ModuleCategories.RENDER) {
     private fun collectAndSortNametagsToRender() {
         nametagPool.recycleAll(nametagsToRender)
         nametagsToRender.clear()
+
         for (entity in RenderedEntities) {
+            NametagEffectsInference.observe(entity, entity.level().gameTime)
+
             val distance = entity.position().cameraDistance().toFloat()
             val scale = scale.transform(distance)
             if (scale > 0.01f) {
@@ -108,6 +113,7 @@ object ModuleNametags : ClientModule("Nametags", ModuleCategories.RENDER) {
                 nametagsToRender += nametag
             }
         }
+        NametagEffectsInference.clearMissingEntities(RenderedEntities)
         nametagsToRender.sortWith(NAMETAG_COMPARATOR)
     }
 
