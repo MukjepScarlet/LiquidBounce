@@ -33,6 +33,7 @@ import net.ccbluex.liquidbounce.config.types.list.MultiChoiceListValue
 import net.ccbluex.liquidbounce.config.types.list.Tagged
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.ValueChangedEvent
+import net.ccbluex.liquidbounce.features.inventoryPreset.InventoryPreset
 import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.script.ScriptApiRequired
 import net.ccbluex.liquidbounce.script.asArray
@@ -322,3 +323,9 @@ open class Value<T : Any>(
     }
 
 }
+
+class InventoryPresetValue : Value<InventoryPreset>(
+    "InventoryPreset",
+    defaultValue = InventoryPreset(),
+    valueType = ValueType.INVENTORY_PRESET,
+)

@@ -54,6 +54,7 @@ enum class ValueType(
     KEY(HumanInputDeserializer.keyDeserializer),
     FILE(HumanInputDeserializer.fileDeserializer),
     BIND,
+    INVENTORY_PRESET,
     VECTOR3_I,
     VECTOR3_D,
     VECTOR2_F,

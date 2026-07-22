@@ -34,3 +34,27 @@ export function isAnniversary() {
 
     return now >= start && now <= end;
 }
+
+export function clickOutside(node: HTMLElement, callback: (event: MouseEvent) => void) {
+    const handleClick = (event: MouseEvent) => {
+        if (!node.contains(event.target as Node)) {
+            callback(event);
+        }
+    };
+
+    const handleDrag = (event: DragEvent) => {
+        if (!node.contains(event.target as Node)) {
+            callback(event);
+        }
+    };
+
+    document.addEventListener('click', handleClick, true);
+    document.addEventListener('dragstart', handleDrag, true);
+
+    return {
+        destroy() {
+            document.removeEventListener('click', handleClick, true);
+            document.removeEventListener('dragstart', handleDrag, true);
+        }
+    };
+}

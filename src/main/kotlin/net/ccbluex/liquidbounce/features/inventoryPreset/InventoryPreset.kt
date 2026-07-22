@@ -1,0 +1,59 @@
+package net.ccbluex.liquidbounce.features.inventoryPreset
+
+import net.ccbluex.liquidbounce.utils.inventory.HotbarItemSlot
+import net.ccbluex.liquidbounce.utils.kotlin.buildEnumMap
+
+/**
+ * Represents an inventory preset configuration defining item groups for specific slots and stack limitations.
+ *
+ * This preset maintains a strict relationship between array indices and inventory slots:
+ * - The [items] array is guaranteed to contain exactly 10 elements.
+ * - Index 0 always represents [HotbarItemSlot.OFFHAND]
+ * - Indices 1-9 correspond to hotbar slots 0-8 respectively (index -1 adjustment)
+ *
+ * @property itemLimitRules Array of stack limitation groups applying to the entire inventory
+ * @param items Initial item group configuration (must contain exactly 10 elements).
+ *             Each array position maps to:
+ *             - [HotbarItemSlot.OFFHAND] for index 0
+ *             - [HotbarItemSlot] (0-8) for indices 1-9
+ *
+ * @throws IllegalArgumentException if item array size isn't exactly 10 during initialization
+ */
+class InventoryPreset(
+    items: Array<List<FrontendSlotPreference>> = Array(HotbarItemSlot.entries.size) { listOf() },
+    val itemLimitRules: List<FrontendItemLimitRules> = emptyList()
+) {
+    val items: Map<HotbarItemSlot, List<FrontendSlotPreference>>
+
+    init {
+        // Required because the frontend would break if there weren't exactly 10 entries...
+        require(items.size == HotbarItemSlot.entries.size)
+
+        require(items.asSequence().flatten().none { it == FrontendSlotPreference.AnySlotPreference }) {
+            "For an item to be Any, the list must be empty."
+        }
+
+        items.forEach { preferences ->
+            val ignoreCount = preferences.count { it == FrontendSlotPreference.IgnoreSlotPreference }
+            require(ignoreCount == 0 || (ignoreCount == 1 && preferences.size == 1)) {
+                "If you use IgnoreSlotPreference, it must be the ONLY element in the list"
+            }
+        }
+
+        this.items = buildEnumMap {
+            items.forEachIndexed { index, item ->
+                this[getSlotForIndex(index)] = item
+            }
+        }
+    }
+
+    private fun getSlotForIndex(idx: Int): HotbarItemSlot {
+        return HotbarItemSlot.entries[idx]
+    }
+
+    fun itemRulesToArray(): Array<List<FrontendSlotPreference>> {
+        return Array(HotbarItemSlot.entries.size) {
+            items[getSlotForIndex(it)].orEmpty()
+        }
+    }
+}

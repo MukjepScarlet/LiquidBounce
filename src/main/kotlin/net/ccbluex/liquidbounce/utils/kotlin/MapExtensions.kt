@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.utils.kotlin
 import it.unimi.dsi.fastutil.objects.Object2IntMap
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap
 import net.ccbluex.fastutil.fastIterator
+import java.util.EnumMap
 import java.util.function.Function
 
 fun <K, V> memorizingFunction(map: MutableMap<K, V>, mappingFunction: Function<K, V>): Function<K, V> =
@@ -38,4 +39,10 @@ fun <K> Object2IntOpenHashMap<K>.sumValues(anotherMap: Object2IntMap<K>): Object
         this.addTo(it.key, it.intValue)
     }
     return this
+}
+
+inline fun <reified K : Enum<K>, V> buildEnumMap(
+    builderAction: EnumMap<K, V>.() -> Unit,
+): EnumMap<K, V> {
+    return EnumMap<K, V>(K::class.java).apply(builderAction)
 }

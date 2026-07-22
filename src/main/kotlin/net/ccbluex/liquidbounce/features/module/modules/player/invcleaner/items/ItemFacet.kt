@@ -29,7 +29,7 @@ import net.minecraft.core.component.DataComponents
 
 open class ItemFacet(val itemSlot: ItemSlot) : Comparable<ItemFacet>, ItemStackHolder by itemSlot {
     open val category: ItemCategory
-        get() = ItemType.NONE.defaultCategory
+        get() = ItemCategory(ItemType.EXACT_ITEM, itemSlot.itemStack.item)
 
     open val providedItemFunctions: List<ObjectIntPair<ItemFunction>>
         get() = emptyList()

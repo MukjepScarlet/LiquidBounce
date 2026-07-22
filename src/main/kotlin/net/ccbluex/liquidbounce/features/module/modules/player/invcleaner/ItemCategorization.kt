@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.BlockItemFacet
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.BowItemFacet
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.CrossbowItemFacet
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.ExactItemFacet
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.FoodItemFacet
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.GodAxeFacet
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.ItemFacet
@@ -83,7 +84,7 @@ import net.minecraft.world.level.material.WaterFluid
 import java.util.function.Predicate
 
 @JvmRecord
-data class ItemCategory(val type: ItemType, val subtype: Int) {
+data class ItemCategory(val type: ItemType, val subtype: Any) {
     fun isEmpty(): Boolean = type == ItemType.NONE
 }
 
@@ -125,6 +126,7 @@ enum class ItemType(
     GAPPLE(false, allocationPriority = Priority.IMPORTANT_FOR_USAGE_1),
     POTION(false),
     BLOCK(false),
+    EXACT_ITEM(true),
     NONE(false);
 
     val defaultCategory = ItemCategory(this, 0)
@@ -240,8 +242,6 @@ class ItemCategorization(
             // Everything could be a weapon (i.e. a stick with Knockback II should be considered a weapon)
             add(WeaponItemFacet(slot))
 
-
-
             when (val item = itemStack.item) {
                 is BowItem -> add(BowItemFacet(slot))
                 is CrossbowItem -> add(CrossbowItemFacet(slot))
@@ -264,8 +264,6 @@ class ItemCategorization(
                         && !ScaffoldBlockItemSelection.isBlockUnfavourable(itemStack)
                     ) {
                         add(BlockItemFacet(slot))
-                    } else {
-                        add(ItemFacet(slot))
                     }
                 }
 
@@ -286,8 +284,6 @@ class ItemCategorization(
 
                     if (areAllEffectsGood) {
                         add(PotionItemFacet(slot))
-                    } else {
-                        add(ItemFacet(slot))
                     }
                 }
 
@@ -318,10 +314,13 @@ class ItemCategorization(
 
                     itemStack.isFood -> add(FoodItemFacet(slot))
 
-                    else -> add(ItemFacet(slot))
+                    else -> Unit
                 }
             }
 
+            val exactCategory = ItemCategory(ItemType.EXACT_ITEM, itemStack.item)
+            val rankingFacet = if (size == 1) PrimitiveItemFacet(slot, exactCategory) else last()
+            add(0, ExactItemFacet(rankingFacet))
         }
     }
 }

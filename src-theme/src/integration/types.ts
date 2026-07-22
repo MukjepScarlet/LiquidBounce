@@ -34,6 +34,7 @@ export interface GroupedModules {
 
 export type ModuleSetting =
     BlocksSetting
+    | InventoryPresetValue
     | BooleanSetting
     | FloatSetting
     | FloatRangeSetting
@@ -66,6 +67,41 @@ export interface FileSelectDialog {
     supportedExtensions: string[] | undefined;
 }
 
+export interface SingleItemPreference {
+    type: "SINGLE";
+    item: string;
+}
+export interface GroupItemPreference {
+    type: "GROUP";
+    group: "ARROWS" | "SWORD" | "WEAPON" | "AXE" | "HOE" | "SHOVEL" | "PICKAXE" | "FOOD" | "POTION" | "BLOCK" | "THROWABLE";
+}
+
+export interface IgnoreItemPreference {
+    type: "IGNORE";
+}
+
+export interface AnyPresetItem {
+    type: "ANY";
+}
+
+export type PresetItem =
+    SingleItemPreference
+    | GroupItemPreference
+    | IgnoreItemPreference
+    | AnyPresetItem;
+
+export interface MaxStacksGroup {
+    itemCount: number;
+    items: PresetItem[];
+}
+
+export type PresetItemGroup = PresetItem[];
+
+export interface InventoryPreset {
+    items: PresetItemGroup[];
+    maxStacks: MaxStacksGroup[];
+}
+
 export interface FileSelectResult {
     file: File | undefined;
 }
@@ -76,6 +112,9 @@ export interface Setting<V> {
     value: V;
     description: string | undefined;
     key: string | undefined;
+}
+
+export interface InventoryPresetValue extends Setting<InventoryPreset> {
 }
 
 export interface FileSetting extends Setting<File> {

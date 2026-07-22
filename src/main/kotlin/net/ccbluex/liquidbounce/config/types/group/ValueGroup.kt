@@ -37,6 +37,7 @@ import net.ccbluex.liquidbounce.config.types.CurveValue
 import net.ccbluex.liquidbounce.config.types.CurveValue.Axis
 import net.ccbluex.liquidbounce.config.types.FileDialogMode
 import net.ccbluex.liquidbounce.config.types.FileValue
+import net.ccbluex.liquidbounce.config.types.InventoryPresetValue
 import net.ccbluex.liquidbounce.config.types.RangedValue
 import net.ccbluex.liquidbounce.config.types.Value
 import net.ccbluex.liquidbounce.config.types.ValueType
@@ -448,6 +449,8 @@ open class ValueGroup(
         value(name, default, ValueType.KEY)
 
     fun text(name: String, default: String) = value(name, default, ValueType.TEXT)
+
+    fun inventoryPreset() = InventoryPresetValue().also(inner::add)
 
     fun regex(name: String, default: Regex) = value(name, default, ValueType.TEXT)
 

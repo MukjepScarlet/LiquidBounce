@@ -18,17 +18,15 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player.invcleaner
 
-import it.unimi.dsi.fastutil.objects.Object2IntMap
-import it.unimi.dsi.fastutil.objects.Reference2IntMap
 import net.ccbluex.fastutil.component1
 import net.ccbluex.fastutil.component2
-import net.ccbluex.fastutil.enumMapOf
-import net.ccbluex.fastutil.objectIntArrayMapOf
-import net.ccbluex.fastutil.referenceIntArrayMapOf
 import net.ccbluex.liquidbounce.event.events.ScheduleInventoryActionEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.ClientModule
 import net.ccbluex.liquidbounce.features.module.ModuleCategories
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.CleanupPlanTemplate.CleanupPlanRestrictions
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.CleanupPlanTemplate.CleanupPlanRestrictions.RestrictionType
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.CleanupPlanTemplate.CleanupPlanSlotContent
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.ItemFacet
 import net.ccbluex.liquidbounce.features.module.modules.player.offhand.ModuleOffhand
 import net.ccbluex.liquidbounce.utils.collection.itemSortedSetOf
@@ -39,6 +37,7 @@ import net.ccbluex.liquidbounce.utils.inventory.ItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.PlayerInventoryConstraints
 import net.ccbluex.liquidbounce.utils.inventory.findNonEmptySlotsInInventory
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
+import net.ccbluex.liquidbounce.utils.kotlin.buildEnumMap
 
 /**
  * InventoryCleaner module
@@ -52,206 +51,181 @@ object ModuleInventoryCleaner : ClientModule(
 
     private val inventoryConstraints = tree(PlayerInventoryConstraints())
 
-
-    private val maxBlocks by int("MaximumBlocks", 512, 0..2500)
-    private val maxArrows by int("MaximumArrows", 128, 0..2500)
-    private val maxThrowables by int("MaximumThrowables", 64, 0..600)
-    private val maxFoods by int("MaximumFoodPoints", 200, 0..2000)
-    private val maxWaterBuckets by int("MaximumWaterBuckets", 2, 0..16)
-    private val maxLavaBuckets by int("MaximumLavaBuckets", 2, 0..16)
-    private val maxMilkBuckets by int("MaximumMilkBuckets", 2, 0..16)
+    @Suppress("unused")
+    private val inventoryPresets by inventoryPreset()
 
     private val itemsBlackList by items("ItemsBlacklist", itemSortedSetOf())
 
-    private val isGreedy by boolean("Greedy", true)
-
-    private val offHandItem by enumChoice("OffHandItem", ItemSortChoice.SHIELD)
-    private val slotItem1 by enumChoice("SlotItem-1", ItemSortChoice.WEAPON)
-    private val slotItem2 by enumChoice("SlotItem-2", ItemSortChoice.BOW)
-    private val slotItem3 by enumChoice("SlotItem-3", ItemSortChoice.PICKAXE)
-    private val slotItem4 by enumChoice("SlotItem-4", ItemSortChoice.AXE)
-    private val slotItem5 by enumChoice("SlotItem-5", ItemSortChoice.NONE)
-    private val slotItem6 by enumChoice("SlotItem-6", ItemSortChoice.POTION)
-    private val slotItem7 by enumChoice("SlotItem-7", ItemSortChoice.FOOD)
-    private val slotItem8 by enumChoice("SlotItem-8", ItemSortChoice.BLOCK)
-    private val slotItem9 by enumChoice("SlotItem-9", ItemSortChoice.BLOCK)
-
-    private fun buildSlotTargetMap(): Map<HotbarItemSlot, ItemSortChoice> {
-        val slotTargets = enumMapOf<HotbarItemSlot, ItemSortChoice>()
-
-        if (HotbarItemSlot.OFFHAND.canBeSwapTarget) slotTargets[HotbarItemSlot.OFFHAND] = offHandItem
-        slotTargets[HotbarItemSlot.SLOT_0] = slotItem1
-        slotTargets[HotbarItemSlot.SLOT_1] = slotItem2
-        slotTargets[HotbarItemSlot.SLOT_2] = slotItem3
-        slotTargets[HotbarItemSlot.SLOT_3] = slotItem4
-        slotTargets[HotbarItemSlot.SLOT_4] = slotItem5
-        slotTargets[HotbarItemSlot.SLOT_5] = slotItem6
-        slotTargets[HotbarItemSlot.SLOT_6] = slotItem7
-        slotTargets[HotbarItemSlot.SLOT_7] = slotItem8
-        slotTargets[HotbarItemSlot.SLOT_8] = slotItem9
-        return slotTargets
-    }
-
-    val cleanupTemplateFromSettings: CleanupPlanPlacementTemplate
+    val cleanupTemplateFromSettings: CleanupPlanTemplate
         get() {
-            val slotTargets = buildSlotTargetMap()
+            val specifiedSlotTargets = this.inventoryPresets.items
+            val currentRestrictionMap = hashMapOf<ItemSlot, RestrictionType>()
 
-            val forbiddenSlots = buildSet<ItemSlot> {
-                for ((slot, choice) in slotTargets) {
-                    if (choice == ItemSortChoice.IGNORE) this += slot
-                }
+            val slotTargets = buildEnumMap<HotbarItemSlot, _> {
+                for ((slot, choice) in specifiedSlotTargets) {
+                    val wishes = choice.mapNotNull {
+                        val representation = it.toBackendRepresentation()
 
-                // Disallow tampering with armor slots since auto armor already handles them
-                this += ArmorItemSlot.entries
+                        currentRestrictionMap.compute(slot) { _, b ->
+                            maxOf(b ?: RestrictionType.NONE, representation.slotRestriction)
+                        }
 
-                if (ModuleOffhand.isOperating()) {
-                    // Disallow tampering with off-hand slot when AutoTotem is active
-                    this.add(HotbarItemSlot.OFFHAND)
+                        representation.contentPreference
+                    }
+
+                    this[slot] = CleanupPlanSlotContent(wishes, 0)
                 }
             }
 
-            val forbiddenSlotsToFill = setOfNotNull(
-                // Disallow tampering with off-hand slot when AutoTotem is active
-                if (ModuleOffhand.isOperating()) HotbarItemSlot.OFFHAND else null
+            // Disallow tampering with armor slots since auto armor already handles them
+            ArmorItemSlot.entries.forEach { currentRestrictionMap[it] = RestrictionType.FORBID_TAMPERING }
+
+            if (ModuleOffhand.isOperating() || !HotbarItemSlot.OFFHAND.canBeSwapTarget) {
+                currentRestrictionMap[HotbarItemSlot.OFFHAND] = RestrictionType.FORBID_TAMPERING
+            }
+
+            val desiredItemCounts = this.inventoryPresets.itemLimitRules.map { rule ->
+                val converted = buildList {
+                    for (item in rule.items) {
+                        val preference = item.toBackendRepresentation().contentPreference ?: continue
+                        preference.subtypes.mapTo(this) { ItemCategory(preference.itemType, it) }
+                    }
+                }
+
+                CategoriesAmount(converted, rule.itemCount)
+            }
+
+            val constraintProvider = AmountItemAmountConstraintProvider(
+                desiredItemsInSpecificCategories = desiredItemCounts
             )
 
-            val constraintProvider = AmountConstraintProvider(
-                desiredItemsPerCategory = objectIntArrayMapOf(
-                    ItemType.BLOCK.defaultCategory, maxBlocks,
-                    ItemType.THROWABLE.defaultCategory, maxThrowables,
-                    ItemType.ARROW.defaultCategory, maxArrows,
-                    ItemSortChoice.WATER.category, maxWaterBuckets,
-                    ItemSortChoice.LAVA.category, maxLavaBuckets,
-                    ItemSortChoice.MILK.category, maxMilkBuckets,
-                ),
-                desiredValuePerFunction = referenceIntArrayMapOf(
-                    ItemFunction.FOOD, maxFoods,
-                    ItemFunction.WEAPON_LIKE, 1,
-                )
-            )
-
-            return CleanupPlanPlacementTemplate(
+            return CleanupPlanTemplate(
                 slotTargets,
-                itemAmountConstraintProvider = constraintProvider::getConstraints,
+                itemAmountConstraintProvider = constraintProvider,
                 itemBlacklist = itemsBlackList,
-                forbiddenSlots = forbiddenSlots,
-                forbiddenSlotsToFill = forbiddenSlotsToFill,
-                isGreedy = isGreedy,
+                restrictions = CleanupPlanRestrictions(currentRestrictionMap)
             )
         }
 
     @Suppress("unused")
     private val handleInventorySchedule = handler<ScheduleInventoryActionEvent> { event ->
         val currentInventorySlots = findNonEmptySlotsInInventory()
-        val cleanupPlan = CleanupPlanGenerator(cleanupTemplateFromSettings, currentInventorySlots)
-            .generatePlan()
+        val cleanupPlan = CleanupPlanGenerator(cleanupTemplateFromSettings, currentInventorySlots).plan
 
-        // Process inventory actions in priority order
-        when {
-            // Step 1: Prioritize hotbar swaps
-            processHotbarSwaps(event, cleanupPlan) -> return@handler
-            // Step 2: Merge stackable items to optimize space
-            processStackMerging(event, cleanupPlan) -> return@handler
-            // Step 3: Remove unwanted items (lowest priority)
-            processItemDisposal(event, cleanupPlan, currentInventorySlots) -> return@handler
-        }
-    }
+        val hotbarSwap = cleanupPlan.swaps.firstOrNull()
+        if (hotbarSwap != null) {
+            val target = hotbarSwap.to as? HotbarItemSlot
+                ?: error("Invalid swap target: ${hotbarSwap.to}. Only hotbar slots are supported.")
 
-    /**
-     * Handles swapping items to correct hotbar positions
-     * @return true if a swap was scheduled, false otherwise
-     */
-    private fun processHotbarSwaps(event: ScheduleInventoryActionEvent, cleanupPlan: InventoryCleanupPlan): Boolean {
-        val hotbarSwap = cleanupPlan.swaps.firstOrNull() ?: return false
-
-        require(hotbarSwap.to is HotbarItemSlot) {
-            "Invalid swap target: ${hotbarSwap.to}. Only hotbar slots are supported."
+            event.schedule(
+                inventoryConstraints,
+                InventoryAction.Click.performSwap(null, hotbarSwap.from, target)
+            )
+            return@handler
         }
 
-        event.schedule(
-            inventoryConstraints,
-            InventoryAction.Click.performSwap(null, hotbarSwap.from, hotbarSwap.to)
-        )
+        val slotToMerge = cleanupPlan.findSlotsToMerge().firstOrNull()
+        if (slotToMerge != null) {
+            event.schedule(
+                inventoryConstraints,
+                InventoryAction.Click.performMergeStack(slot = slotToMerge),
+            )
+            return@handler
+        }
 
-        return true
-    }
-
-    /**
-     * Handles merging stackable items to optimize inventory space
-     * @return true if a merge was scheduled, false otherwise
-     */
-    private fun processStackMerging(event: ScheduleInventoryActionEvent, cleanupPlan: InventoryCleanupPlan): Boolean {
-        val stacksToMerge = cleanupPlan.findSlotsToMerge()
-        val slotToMerge = stacksToMerge.firstOrNull() ?: return false
-
-        // pickup -> pickup all -> pickup to handle remaining items
-        event.schedule(
-            inventoryConstraints,
-            InventoryAction.Click.performMergeStack(slot = slotToMerge),
-        )
-
-        return true
-    }
-
-    private fun processItemDisposal(
-        event: ScheduleInventoryActionEvent,
-        cleanupPlan: InventoryCleanupPlan,
-        currentInventorySlots: List<ItemSlot>
-    ): Boolean {
-        val planDisposalItems = cleanupPlan.findItemsToThrowOut(currentInventorySlots)
-        val blacklistedItems = currentInventorySlots.filter { it.itemStack.item in itemsBlackList }
-
-        // Blacklisted items
-        val itemsToDispose = (blacklistedItems + planDisposalItems).distinct()
-        val itemToThrow = itemsToDispose.firstOrNull() ?: return false
+        val itemToThrow = cleanupPlan.findItemsToThrowOut(currentInventorySlots).firstOrNull()
+            ?: currentInventorySlots.firstOrNull { it.itemStack.item in itemsBlackList }
+            ?: return@handler
 
         event.schedule(
             inventoryConstraints,
             InventoryAction.Click.performThrow(screen = null, itemToThrow),
             Priority.NOT_IMPORTANT
         )
-
-        return true
     }
 
-    private class AmountConstraintProvider(
-        val desiredItemsPerCategory: Object2IntMap<ItemCategory>,
-        val desiredValuePerFunction: Reference2IntMap<ItemFunction>,
-    ) {
-        fun getConstraints(facet: ItemFacet): MutableList<ItemConstraintInfo> {
-            val constraints = mutableListOf<ItemConstraintInfo>()
+    internal data class CategoriesAmount(val categories: List<ItemCategory>, val desiredAmount: Int)
 
-            if (facet.providedItemFunctions.isEmpty()) {
-                val defaultDesiredAmount = if (facet.category.type.oneIsSufficient) 1 else Integer.MAX_VALUE
-                val desiredAmount = this.desiredItemsPerCategory.getOrDefault(facet.category, defaultDesiredAmount)
+    internal class AmountItemAmountConstraintProvider(
+        /**
+         * Contains information about specific item groups constraints like `[snowball, egg] -> 32`.
+         * In that example, the inventory cleaner would not start throwing out items until at least 32 items of
+         * snowballs or eggs are in the inventory.
+         */
+        desiredItemsInSpecificCategories: List<CategoriesAmount>
+    ) : ItemAmountConstraintProvider {
+        /**
+         * Contains all specific item groups in which an item is.
+         *
+         * For these rules: `[egg, snowball] -> 32, [egg, carrot] -> 64`, this list would look like this:
+         * - `egg` -> `[0, 1]`
+         * - `snowball` -> `[0]`
+         * - `carrot` -> `[1]`
+         */
+        private val itemSpecificGroupMap = buildMap {
+            desiredItemsInSpecificCategories.forEachIndexed { idx, (categories, desiredAmount) ->
+                val group = SpecificItemGroup(id = idx, desiredAmount = desiredAmount, priority = idx)
 
+                for (category in categories) {
+                    getOrPut(category, ::ArrayList).add(group)
+                }
+            }
+        }
+
+        override fun getConstraints(facet: ItemFacet): ArrayList<ItemConstraintInfo> {
+            val constraints = ArrayList<ItemConstraintInfo>()
+
+            for (group in this.itemSpecificGroupMap.getOrDefault(facet.category, emptyList())) {
                 val info = ItemConstraintInfo(
-                    group = ItemCategoryConstraintGroup(
-                        desiredAmount..Integer.MAX_VALUE,
-                        10,
-                        facet.category
+                    group = SpecificItemGroupConstraintGroup(
+                        acceptableRange = group.desiredAmount..Int.MAX_VALUE,
+                        priority = group.priority,
+                        groupId = group.id
                     ),
-                    amountAddedByItem = facet.itemStack.count
+                    amountAddedByItem = facet.itemStack.count,
+                    default = false
                 )
 
                 constraints.add(info)
-            } else {
-                for ((function, amountAdded) in facet.providedItemFunctions) {
-                    val info = ItemConstraintInfo(
-                        group = ItemFunctionCategoryConstraintGroup(
-                            desiredValuePerFunction.getOrDefault(function, 1)..Integer.MAX_VALUE,
-                            10,
-                            function
-                        ),
-                        amountAddedByItem = amountAdded
-                    )
+            }
 
-                    constraints.add(info)
-                }
+            for ((function, amountAdded) in facet.providedItemFunctions) {
+                val info = ItemConstraintInfo(
+                    group = ItemFunctionCategoryConstraintGroup(
+                        1..Int.MAX_VALUE,
+                        1000,
+                        function
+                    ),
+                    amountAddedByItem = amountAdded,
+                    default = true
+                )
+
+                constraints.add(info)
+            }
+
+            if (facet.providedItemFunctions.isEmpty() && facet.category.type != ItemType.EXACT_ITEM) {
+                val defaultDesiredAmount = if (facet.category.type.oneIsSufficient) 1 else Int.MAX_VALUE
+
+                val info = ItemConstraintInfo(
+                    group = ItemCategoryConstraintGroup(
+                        defaultDesiredAmount..Int.MAX_VALUE,
+                        1000,
+                        facet.category
+                    ),
+                    amountAddedByItem = facet.itemStack.count,
+                    default = true
+                )
+
+                constraints.add(info)
             }
 
             return constraints
         }
-    }
 
+        override fun getAllocationPriority(itemGroup: ItemCategory): Int {
+            return -this.itemSpecificGroupMap.getOrDefault(itemGroup, emptyList()).size
+        }
+
+        private class SpecificItemGroup(val id: Int, val desiredAmount: Int, val priority: Int)
+    }
 }
